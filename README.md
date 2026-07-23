@@ -1,29 +1,14 @@
 # worktree-dashboard
 
 A terminal dashboard for git worktrees, written in Go on
-[Bubble Tea](https://github.com/charmbracelet/bubbletea). This is a full-parity
-successor to an earlier Python/Textual implementation.
+[Bubble Tea](https://github.com/charmbracelet/bubbletea).
 
-It discovers every worktree of a repository, enriches each with git status, pull
-request state, docker-compose status, and live Claude session state, and lets you
-open, create, and delete worktrees from one screen.
-
-## Why the rewrite
-
-The Python/Textual predecessor worked but the framework fought us: Textual
-re-composites on a timer, so it burned ~27% of a core at idle (~10% even after we
-hand-throttled the spinner), grew RSS ~3 MB/min inside the render loop, and could
-take up to 20 s to shut down because Python threads can't be cancelled.
-
-Bubble Tea's Elm architecture repaints **only when state changes**, so this app
-idles at ~0–1% of a core with flat RSS (~11 MB) and quits instantly — background
-work runs in `tea.Cmd` goroutines under a cancellable `context`, so on quit the
-loop ends immediately and stray results are simply dropped.
-
-Go — not Rust — because this is I/O-bound subprocess orchestration
-(`git`/`gh`/`docker`) wrapped in a TUI, exactly the niche of lazygit / gh-dash /
-k9s. Rust + ratatui would cost immediate-mode redraw complexity and borrow-checker
-friction around the async fan-out for no benefit on this workload.
+It discovers every worktree of a repository and presents them in one screen,
+enriching each row with git status, pull-request state, docker-compose status,
+and live Claude session state. From the same screen you can open a worktree
+(VS Code, a terminal, or Claude), open its pull request, create a new worktree,
+and delete one. The renderer is event-driven, so it repaints only when state
+changes and idles at ~0–1% of a core with a flat, small memory footprint.
 
 ## Build & run
 
@@ -56,7 +41,7 @@ CGO_ENABLED=0 go build -o bin/worktree-dashboard .
 | `t`           | open a terminal in the worktree                    |
 | `c`           | open Claude (resume or fresh) in a terminal        |
 | `n`           | new worktree (input dialog, branched off `origin/main`) |
-| `y` / `ctrl+c`| copy the worktree path (`ctrl+c` is **copy**, not quit — matches v1) |
+| `y` / `ctrl+c`| copy the worktree path (`ctrl+c` is **copy**, not quit) |
 | `d`           | delete the worktree (confirm dialog)               |
 | `q`           | quit                                              |
 
@@ -71,7 +56,7 @@ Each tier is a self-rescheduling `tea.Tick`; a worktree/PR tick that fires while
 a poll is still running is skipped and counted:
 
 - Claude session state — 1 s
-- spinner frame — 0.25 s (pure frame increment; only repaints while a row animates)
+- spinner frame — 0.125 s (pure frame increment; only repaints while a row animates)
 - worktree rediscovery + status — 30 s
 - pull requests — 15 min
 - trace sample — 60 s
@@ -101,7 +86,7 @@ skipped-poll counts) are appended to:
 ~/.local/state/worktree-dashboard/trace.log
 ```
 
-## Known deviations from v1
+## Limitations
 
 - **No OSC 52 clipboard fallback.** Copy uses `wl-copy`/`xclip`/`xsel`/`pbcopy`;
   if none is present, the copy reports an error rather than falling back to an
