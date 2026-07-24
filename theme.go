@@ -34,6 +34,7 @@ var (
 	styleWorking = lipgloss.NewStyle().Foreground(colorYellow)
 	styleIdle    = lipgloss.NewStyle().Foreground(colorGreen)
 	styleError   = lipgloss.NewStyle().Foreground(colorRed)
+	styleLocked  = lipgloss.NewStyle().Foreground(lipgloss.Color("208"))
 	styleBold    = lipgloss.NewStyle().Bold(true)
 	styleHeading = lipgloss.NewStyle().Bold(true).Underline(true)
 

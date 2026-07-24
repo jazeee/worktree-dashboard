@@ -56,6 +56,7 @@ func newWorktreeInfoDefaults() WorktreeInfo {
 		Role:             RoleLinked,
 		Shape:            ShapeNormal,
 		HeadState:        HeadOnBranch,
+		LockState:        LockUnlocked,
 		Cleanliness:      CleanlinessUnknown,
 		PullRequestState: PullRequestNone,
 		ReviewDecision:   ReviewNone,
@@ -97,6 +98,9 @@ func ParseWorktreePorcelain(porcelain string) []WorktreeInfo {
 			current.Shape = ShapeBare
 		case line == "detached":
 			current.HeadState = HeadDetached
+		case line == "locked" || strings.HasPrefix(line, "locked "):
+			current.LockState = LockLocked
+			current.LockReason = strings.TrimSpace(strings.TrimPrefix(line, "locked"))
 		}
 	}
 	flush()

@@ -88,6 +88,35 @@ func TestParseWorktreePorcelain(test *testing.T) {
 	if worktrees[1].Kind != KindNestedWorktree {
 		test.Errorf("second worktree kind = %q, want NestedWorktree", worktrees[1].Kind)
 	}
+	if worktrees[0].LockState != LockUnlocked {
+		test.Errorf("first worktree should be unlocked, got %q", worktrees[0].LockState)
+	}
+}
+
+func TestParseWorktreePorcelainLocked(test *testing.T) {
+	porcelain := "worktree /home/jaz/code/notable/vivaa/.claude/worktrees/primary-typescript7\n" +
+		"HEAD 98ed963e\n" +
+		"branch refs/heads/worktree-primary-typescript7\n" +
+		"locked claude session primary-typescript7 (pid 3515922 start 135813619)\n" +
+		"\n" +
+		"worktree /home/jaz/code/notable/vivaa/backend/worktrees/plain\n" +
+		"HEAD abc123\n" +
+		"branch refs/heads/plain\n" +
+		"locked\n" +
+		"\n"
+	worktrees := ParseWorktreePorcelain(porcelain)
+	if len(worktrees) != 2 {
+		test.Fatalf("expected 2 worktrees, got %d", len(worktrees))
+	}
+	if worktrees[0].LockState != LockLocked {
+		test.Errorf("first worktree should be locked, got %q", worktrees[0].LockState)
+	}
+	if worktrees[0].LockReason != "claude session primary-typescript7 (pid 3515922 start 135813619)" {
+		test.Errorf("lock reason parsed wrong: %q", worktrees[0].LockReason)
+	}
+	if worktrees[1].LockState != LockLocked || worktrees[1].LockReason != "" {
+		test.Errorf("second worktree should be locked with no reason, got %q / %q", worktrees[1].LockState, worktrees[1].LockReason)
+	}
 }
 
 func TestParseStatusV2(test *testing.T) {
@@ -200,6 +229,12 @@ func TestDetermineDeletionEligibility(test *testing.T) {
 	root.Kind = KindRootWorktree
 	if got := DetermineDeletionEligibility(root); got != EligibilityNotDeletable {
 		test.Errorf("root worktree should be NotDeletable, got %q", got)
+	}
+
+	locked := base()
+	locked.LockState = LockLocked
+	if got := DetermineDeletionEligibility(locked); got != EligibilityNotDeletable {
+		test.Errorf("locked worktree should be NotDeletable, got %q", got)
 	}
 }
 

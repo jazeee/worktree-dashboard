@@ -61,6 +61,9 @@ func DetermineBlinkPhase(now time.Time) BlinkPhase {
 // a nested worktree or branch whose PR is merged, with no ahead commits or dirty
 // files.
 func DetermineDeletionEligibility(worktree WorktreeInfo) DeletionEligibility {
+	if worktree.LockState == LockLocked {
+		return EligibilityNotDeletable
+	}
 	if worktree.Kind != KindNestedWorktree && worktree.Kind != KindBranchOnly {
 		return EligibilityNotDeletable
 	}
@@ -235,6 +238,9 @@ func RenderBranchCell(worktree WorktreeInfo) string {
 
 // FormatRecommendationCell renders the Recommendation column.
 func FormatRecommendationCell(worktree WorktreeInfo) string {
+	if worktree.LockState == LockLocked {
+		return styleLocked.Render("locked")
+	}
 	if worktree.Cleanliness == CleanlinessUnknown {
 		return styleDim.Render("…")
 	}
@@ -361,6 +367,15 @@ func BuildDetailView(worktree WorktreeInfo, now time.Time, frame int) string {
 		"",
 		styleBold.Render("Path"),
 		"  "+pathDisplay,
+	)
+	if worktree.LockState == LockLocked {
+		lockLine := styleLocked.Render("🔒 locked")
+		if worktree.LockReason != "" {
+			lockLine += "  " + styleDim.Render(worktree.LockReason)
+		}
+		lines = append(lines, "", styleBold.Render("Lock"), "  "+lockLine)
+	}
+	lines = append(lines,
 		"",
 		styleBold.Render("Status")+"      "+FormatStatusSummary(worktree),
 		styleBold.Render("Files changed")+"  "+filesDisplay,

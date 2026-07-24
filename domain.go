@@ -40,6 +40,15 @@ const (
 	HeadDetached HeadState = "Detached"
 )
 
+// LockState reflects `git worktree`'s locked annotation: a locked worktree is one
+// git refuses to prune or move until it is unlocked.
+type LockState string
+
+const (
+	LockUnlocked LockState = "Unlocked"
+	LockLocked   LockState = "Locked"
+)
+
 // WorkingTreeCleanliness replaces v1's tri-state is_clean (None/True/False).
 type WorkingTreeCleanliness string
 
@@ -164,6 +173,8 @@ type WorktreeInfo struct {
 	Role           WorktreeRole
 	Shape          WorktreeShape
 	HeadState      HeadState
+	LockState      LockState
+	LockReason     string
 
 	Cleanliness    WorkingTreeCleanliness
 	DirtyFileCount int
