@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -20,6 +21,31 @@ func CategorizePath(path string) WorktreeKind {
 		return KindRootWorktree
 	}
 	return KindNestedWorktree
+}
+
+// permanentIndexPattern captures the NN in a .../notable/scr-NN[-suffix] root
+// worktree path so it can be shown as that worktree's fixed index.
+var permanentIndexPattern = regexp.MustCompile(`/notable/scr-(\d+)(?:-[^/]+)?/?$`)
+
+// PermanentWorktreeLabel returns the fixed index shown to the left of a permanent
+// (root) worktree row: the number from a scr-NN checkout, "0" for the vivaa
+// checkout, and "" for any non-permanent row.
+func PermanentWorktreeLabel(worktree WorktreeInfo) string {
+	if worktree.Kind != KindRootWorktree {
+		return ""
+	}
+	if strings.HasSuffix(strings.TrimSuffix(worktree.Path, "/"), "/notable/vivaa") {
+		return "0"
+	}
+	match := permanentIndexPattern.FindStringSubmatch(worktree.Path)
+	if match == nil {
+		return ""
+	}
+	number, conversionError := strconv.Atoi(match[1])
+	if conversionError != nil {
+		return ""
+	}
+	return strconv.Itoa(number)
 }
 
 // newWorktreeInfoDefaults returns a WorktreeInfo with every string-union field

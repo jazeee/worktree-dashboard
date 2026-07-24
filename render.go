@@ -210,7 +210,9 @@ func FormatAheadBehindCell(worktree WorktreeInfo) string {
 	return ahead + " " + behind
 }
 
-// RenderBranchCell renders the Branch column with a kind-specific style.
+// RenderBranchCell renders the Branch column with a kind-specific style. Nested
+// worktree branches get a "* " prefix; permanent (root) worktrees get their fixed
+// index as a "<n> " prefix in the same space.
 func RenderBranchCell(worktree WorktreeInfo) string {
 	label := worktree.Branch
 	if label == "" {
@@ -223,7 +225,11 @@ func RenderBranchCell(worktree WorktreeInfo) string {
 	case KindBranchOnly:
 		return styleBranchOnly.Bold(deletable).Render(label)
 	default:
-		return styleRootBranch.Bold(deletable).Render(label)
+		prefix := ""
+		if indexLabel := PermanentWorktreeLabel(worktree); indexLabel != "" {
+			prefix = indexLabel + " "
+		}
+		return styleRootBranch.Bold(deletable).Render(prefix + label)
 	}
 }
 

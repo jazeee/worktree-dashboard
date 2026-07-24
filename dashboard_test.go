@@ -41,6 +41,28 @@ func TestCategorizePath(test *testing.T) {
 	}
 }
 
+func TestPermanentWorktreeLabel(test *testing.T) {
+	cases := []struct {
+		path string
+		kind WorktreeKind
+		want string
+	}{
+		{"/home/jaz/code/notable/scr-01", KindRootWorktree, "1"},
+		{"/home/jaz/code/notable/scr-06-misc", KindRootWorktree, "6"},
+		{"/home/jaz/code/notable/scr-12", KindRootWorktree, "12"},
+		{"/home/jaz/code/notable/vivaa", KindRootWorktree, "0"},
+		{"/home/jaz/code/notable/vivaa/", KindRootWorktree, "0"},
+		{"/home/jaz/code/notable/scr-01/worktrees/feature", KindNestedWorktree, ""},
+		{"/tmp/some/other/checkout", KindNestedWorktree, ""},
+	}
+	for _, testCase := range cases {
+		worktree := WorktreeInfo{Path: testCase.path, Kind: testCase.kind}
+		if got := PermanentWorktreeLabel(worktree); got != testCase.want {
+			test.Errorf("PermanentWorktreeLabel(%q) = %q, want %q", testCase.path, got, testCase.want)
+		}
+	}
+}
+
 func TestParseWorktreePorcelain(test *testing.T) {
 	porcelain := "worktree /home/jaz/code/notable/scr-01\n" +
 		"HEAD abc123\n" +
