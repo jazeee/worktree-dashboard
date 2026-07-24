@@ -67,6 +67,7 @@ type DashboardModel struct {
 	worktreePoll    PollActivity
 	pullRequestPoll PollActivity
 	lifecyclePhase  LifecyclePhase
+	mouseCapture    MouseCapture
 
 	deletedKeys map[string]time.Time
 
@@ -96,6 +97,7 @@ func NewDashboardModel(repositoryRoot string) DashboardModel {
 		worktreePoll:      PollIdle,
 		pullRequestPoll:   PollIdle,
 		lifecyclePhase:    LifecycleRunning,
+		mouseCapture:      MouseCaptureOn,
 		dialog:            NoDialog(),
 	}
 }
@@ -214,6 +216,21 @@ func (dashboard DashboardModel) handleMouse(mouse tea.MouseMsg) (tea.Model, tea.
 	return dashboard, nil
 }
 
+// toggleMouseCapture flips mouse interception on or off. Turning it off releases
+// the mouse to the terminal so the detail pane's text can be selected and copied
+// with the native drag-select; turning it back on restores click-to-select and
+// wheel scrolling.
+func (dashboard DashboardModel) toggleMouseCapture() (tea.Model, tea.Cmd) {
+	if dashboard.mouseCapture == MouseCaptureOn {
+		dashboard.mouseCapture = MouseCaptureOff
+		dashboard.setNotification("mouse released — drag to select text; press m to re-enable", SeverityWarning)
+		return dashboard, tea.Batch(tea.DisableMouse, dashboard.notificationClearCommand())
+	}
+	dashboard.mouseCapture = MouseCaptureOn
+	dashboard.setNotification("mouse capture on", SeverityInfo)
+	return dashboard, tea.Batch(tea.EnableMouseCellMotion, dashboard.notificationClearCommand())
+}
+
 // selectRowAtPoint moves the cursor to the worktree row under a click, if the
 // click landed on a data row of the table (not the column header, the empty pad
 // below the rows, or — in the side-by-side layout — the detail pane).
@@ -301,6 +318,8 @@ func (dashboard DashboardModel) handleBrowsingKey(key tea.KeyMsg) (tea.Model, te
 		})
 	case "d":
 		return dashboard.handleDeleteRequest()
+	case "m":
+		return dashboard.toggleMouseCapture()
 	case "up", "k":
 		dashboard.moveCursor(-1)
 		return dashboard, nil
@@ -1032,7 +1051,7 @@ func (dashboard DashboardModel) renderStatusLine() string {
 			return styleClean.Render(dashboard.notification)
 		}
 	}
-	return styleDim.Render("q quit · r refresh · / search · o PR · v code · t term · c claude · n new · y copy · d delete")
+	return styleDim.Render("q quit · r refresh · / search · o PR · v code · t term · c claude · n new · y copy · d delete · m mouse")
 }
 
 // padCell fixes a rendered cell to width, truncating with an ellipsis. lipgloss's

@@ -154,6 +154,17 @@ const (
 	PollRunning PollActivity = "Running"
 )
 
+// MouseCapture reflects whether the app is intercepting mouse events. When on,
+// click-to-select-row and wheel-scroll work but the terminal's own drag-to-select
+// is suppressed; turning it off releases the mouse so text can be selected and
+// copied with the native terminal selection.
+type MouseCapture string
+
+const (
+	MouseCaptureOn  MouseCapture = "On"
+	MouseCaptureOff MouseCapture = "Off"
+)
+
 // LifecyclePhase replaces v1's shutting_down boolean.
 type LifecyclePhase string
 

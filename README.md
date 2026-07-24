@@ -43,12 +43,16 @@ CGO_ENABLED=0 go build -o bin/worktree-dashboard .
 | `n`           | new worktree (input dialog, branched off `origin/main`) |
 | `y` / `ctrl+c`| copy the worktree path (`ctrl+c` is **copy**, not quit) |
 | `d`           | delete the worktree (confirm dialog)               |
+| `m`           | toggle mouse capture (release the mouse to select text) |
 | `q`           | quit                                              |
 
 The mouse works too: **left-click a row** to select it, and the **scroll wheel**
 moves the cursor. Because the app enables mouse tracking, your terminal's own
-click-drag text selection is suppressed while it runs — hold **Shift** to select
-text as usual.
+click-drag text selection is suppressed while it runs. To copy text from the
+detail pane, press **`m`** to release the mouse — the terminal's native
+click-drag selection comes back — then press **`m`** again to restore
+click-to-select and wheel scrolling. (Holding **Shift** also selects text
+without toggling, if your terminal supports it.)
 
 ## Live refresh tiers
 
