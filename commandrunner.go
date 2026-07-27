@@ -243,6 +243,31 @@ func OpenUrl(url string) error {
 	return LaunchDetachedProcess([]string{"xdg-open", url}, "")
 }
 
+// PtyxisNewWindowHelperPath is ~/.local/bin/ptyxis-new-window.sh, the KWin helper
+// that spawns a ptyxis window on the largest screen so multi-monitor fractional
+// scaling doesn't mis-size it. Mirrors ClaudeSessionLauncherPath.
+func PtyxisNewWindowHelperPath() string {
+	home, homeError := os.UserHomeDir()
+	if homeError != nil {
+		home = os.Getenv("HOME")
+	}
+	return filepath.Join(home, ".local", "bin", "ptyxis-new-window.sh")
+}
+
+// LaunchTerminalWindow launches a terminal-spawn argv detached. For ptyxis, when
+// the ptyxis-new-window.sh helper is present it prepends the helper so the new
+// window is born on the largest screen (see PtyxisNewWindowHelperPath). For every
+// other terminal, or when the helper is absent, it launches argv directly.
+func LaunchTerminalWindow(argv []string, terminalName string, workingDirectory string) error {
+	if terminalName == "ptyxis" {
+		helper := PtyxisNewWindowHelperPath()
+		if isRegularFile(helper) {
+			argv = append([]string{helper}, argv...)
+		}
+	}
+	return LaunchDetachedProcess(argv, workingDirectory)
+}
+
 // ClaudeSessionLauncherPath is ~/.local/bin/claude-worktree-session.sh, the
 // resume-or-fresh Claude launcher opened by the `c` action. Ported from v1's
 // CLAUDE_SESSION_LAUNCHER.

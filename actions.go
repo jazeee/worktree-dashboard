@@ -56,7 +56,7 @@ func openInTerminalCommand(worktreePath string) tea.Cmd {
 		if !found {
 			return actionResultMsg{text: noTerminalMessage(), severity: SeverityError}
 		}
-		if launchError := LaunchDetachedProcess(argv, worktreePath); launchError != nil {
+		if launchError := LaunchTerminalWindow(argv, terminalName, worktreePath); launchError != nil {
 			return actionResultMsg{text: "Failed to launch " + terminalName + ": " + launchError.Error(), severity: SeverityError}
 		}
 		return actionResultMsg{text: "Opening in " + terminalName + ": " + worktreePath, severity: SeverityInfo}
@@ -91,7 +91,7 @@ func openClaudeInTerminal(worktreePath string) (terminalName string, failure str
 	if !found {
 		return "", noTerminalMessage()
 	}
-	if launchError := LaunchDetachedProcess(argv, worktreePath); launchError != nil {
+	if launchError := LaunchTerminalWindow(argv, chosenTerminal, worktreePath); launchError != nil {
 		return "", "Failed to launch " + chosenTerminal + ": " + launchError.Error()
 	}
 	return chosenTerminal, ""
