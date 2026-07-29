@@ -114,6 +114,11 @@ func FormatClaudeCell(worktree WorktreeInfo, now time.Time, frame int) string {
 	if label == "" {
 		label = string(displayState)
 	}
+	// Prefix the permanent worktree index (the scr-NN number) so a Claude session
+	// can be tied to its checkout at a glance, e.g. "! 5 some name".
+	if indexLabel := PermanentWorktreeLabel(worktree); indexLabel != "" {
+		label = indexLabel + " " + label
+	}
 	liveness := DetermineClaudeLiveness(worktree, now)
 	if liveness == LivenessStale {
 		return styleDim.Render("○ " + label + " (stale)")
