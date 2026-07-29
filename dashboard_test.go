@@ -50,8 +50,8 @@ func TestPermanentWorktreeLabel(test *testing.T) {
 		{"/home/jaz/code/notable/scr-01", KindRootWorktree, "1"},
 		{"/home/jaz/code/notable/scr-06-misc", KindRootWorktree, "6"},
 		{"/home/jaz/code/notable/scr-12", KindRootWorktree, "12"},
-		{"/home/jaz/code/notable/vivaa", KindRootWorktree, "0"},
-		{"/home/jaz/code/notable/vivaa/", KindRootWorktree, "0"},
+		{"/home/jaz/code/notable/vivaa", KindRootWorktree, "2"},
+		{"/home/jaz/code/notable/vivaa/", KindRootWorktree, "2"},
 		{"/home/jaz/code/notable/scr-01/worktrees/feature", KindNestedWorktree, ""},
 		{"/tmp/some/other/checkout", KindNestedWorktree, ""},
 	}

@@ -28,14 +28,14 @@ func CategorizePath(path string) WorktreeKind {
 var permanentIndexPattern = regexp.MustCompile(`/notable/scr-(\d+)(?:-[^/]+)?/?$`)
 
 // PermanentWorktreeLabel returns the fixed index shown to the left of a permanent
-// (root) worktree row: the number from a scr-NN checkout, "0" for the vivaa
-// checkout, and "" for any non-permanent row.
+// (root) worktree row: the number from a scr-NN checkout, "2" for the vivaa
+// checkout (a unique case), and "" for any non-permanent row.
 func PermanentWorktreeLabel(worktree WorktreeInfo) string {
 	if worktree.Kind != KindRootWorktree {
 		return ""
 	}
 	if strings.HasSuffix(strings.TrimSuffix(worktree.Path, "/"), "/notable/vivaa") {
-		return "0"
+		return "2"
 	}
 	match := permanentIndexPattern.FindStringSubmatch(worktree.Path)
 	if match == nil {
