@@ -247,7 +247,7 @@ const (
 	// session whose terminal died before its Stop/SessionEnd hook fired.
 	ClaudeStaleThreshold = 2 * time.Hour
 
-	ClaudePollInterval      = 1 * time.Second
+	ClaudePollInterval      = 500 * time.Millisecond
 	SpinnerTickInterval     = 125 * time.Millisecond
 	WorktreePollInterval    = 30 * time.Second
 	PullRequestPollInterval = 15 * time.Minute
