@@ -27,6 +27,9 @@ go test ./...
 CGO_ENABLED=0 go build -o bin/worktree-dashboard .
 ```
 
+`~/.local/bin/worktree-dashboard` symlinks to `bin/worktree-dashboard`, so
+rebuild after every change or you will keep running the old binary.
+
 ## Keybindings
 
 | Key           | Action                                            |
