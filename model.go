@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -84,7 +85,7 @@ type DashboardModel struct {
 // NewDashboardModel builds the initial model for a repository root.
 func NewDashboardModel(repositoryRoot string) DashboardModel {
 	searchField := textinput.New()
-	searchField.Placeholder = "search branch / claude name (regex) — Enter to keep, Esc to clear"
+	searchField.Placeholder = "search branch / claude name / PR number (regex) — Enter to keep, Esc to clear"
 	searchField.CharLimit = 200
 
 	return DashboardModel{
@@ -305,9 +306,7 @@ func (dashboard DashboardModel) handleBrowsingKey(key tea.KeyMsg) (tea.Model, te
 			return openInEditorCommand(worktree.Path)
 		})
 	case "t":
-		return dashboard.launchAction(func(worktree WorktreeInfo) tea.Cmd {
-			return openInTerminalCommand(worktree.Path)
-		})
+		return dashboard.handleOpenTerminal()
 	case "c":
 		return dashboard.handleOpenClaude()
 	case "n":
@@ -418,6 +417,24 @@ func (dashboard DashboardModel) launchAction(makeCommand func(WorktreeInfo) tea.
 	return dashboard, makeCommand(worktree)
 }
 
+// handleOpenTerminal opens a terminal in the current row's worktree, creating a
+// worktree first when the row is a branch with none.
+func (dashboard DashboardModel) handleOpenTerminal() (tea.Model, tea.Cmd) {
+	worktree, found := dashboard.currentWorktree()
+	if !found {
+		return dashboard, nil
+	}
+	if worktree.Path == "" {
+		if worktree.Branch == "" {
+			dashboard.setNotification("No worktree or branch to open", SeverityWarning)
+			return dashboard, dashboard.notificationClearCommand()
+		}
+		dashboard.setNotification("Creating worktree for '"+worktree.Branch+"'…", SeverityInfo)
+		return dashboard, createBranchWorktreeCommand(dashboard.repositoryRoot, worktree.Branch, OpenerTerminal)
+	}
+	return dashboard, openInTerminalCommand(worktree.Path)
+}
+
 func (dashboard DashboardModel) handleOpenClaude() (tea.Model, tea.Cmd) {
 	worktree, found := dashboard.currentWorktree()
 	if !found {
@@ -425,7 +442,8 @@ func (dashboard DashboardModel) handleOpenClaude() (tea.Model, tea.Cmd) {
 	}
 	if worktree.Path == "" {
 		if worktree.Branch != "" {
-			return dashboard, createBranchWorktreeCommand(dashboard.repositoryRoot, worktree.Branch)
+			dashboard.setNotification("Creating worktree for '"+worktree.Branch+"'…", SeverityInfo)
+			return dashboard, createBranchWorktreeCommand(dashboard.repositoryRoot, worktree.Branch, OpenerClaude)
 		}
 		dashboard.setNotification("No worktree or branch to open", SeverityWarning)
 		return dashboard, dashboard.notificationClearCommand()
@@ -443,7 +461,7 @@ func (dashboard DashboardModel) handleNewWorktree() (tea.Model, tea.Cmd) {
 		return dashboard, nil
 	}
 	if worktree.Path == "" && worktree.Branch != "" {
-		return dashboard, createBranchWorktreeCommand(dashboard.repositoryRoot, worktree.Branch)
+		return dashboard, createBranchWorktreeCommand(dashboard.repositoryRoot, worktree.Branch, OpenerClaude)
 	}
 	baseDirectory := worktree.Path
 	if baseDirectory == "" {
@@ -804,6 +822,9 @@ func (dashboard DashboardModel) matchesSearch(worktree WorktreeInfo) bool {
 		return true
 	}
 	haystack := worktree.Branch + "\n" + worktree.ClaudeSessionName
+	if worktree.PullRequestNumber > 0 {
+		haystack += "\n#" + strconv.Itoa(worktree.PullRequestNumber) + "\n" + worktree.PullRequestTitle
+	}
 	compiled, compileError := regexp.Compile("(?i)" + dashboard.searchPattern)
 	if compileError != nil {
 		return strings.Contains(strings.ToLower(haystack), strings.ToLower(dashboard.searchPattern))

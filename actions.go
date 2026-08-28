@@ -52,15 +52,25 @@ func openInTerminalCommand(worktreePath string) tea.Cmd {
 		if worktreePath == "" {
 			return actionResultMsg{text: "No worktree path for this branch", severity: SeverityWarning}
 		}
-		argv, terminalName, found := SelectTerminalCommand(worktreePath, nil)
-		if !found {
-			return actionResultMsg{text: noTerminalMessage(), severity: SeverityError}
-		}
-		if launchError := LaunchTerminalWindow(argv, terminalName, worktreePath); launchError != nil {
-			return actionResultMsg{text: "Failed to launch " + terminalName + ": " + launchError.Error(), severity: SeverityError}
+		terminalName, failure := openShellInTerminal(worktreePath)
+		if failure != "" {
+			return actionResultMsg{text: failure, severity: SeverityError}
 		}
 		return actionResultMsg{text: "Opening in " + terminalName + ": " + worktreePath, severity: SeverityInfo}
 	}
+}
+
+// openShellInTerminal launches a plain terminal window at path. On success it
+// returns the terminal name and an empty failure.
+func openShellInTerminal(worktreePath string) (terminalName string, failure string) {
+	argv, chosenTerminal, found := SelectTerminalCommand(worktreePath, nil)
+	if !found {
+		return "", noTerminalMessage()
+	}
+	if launchError := LaunchTerminalWindow(argv, chosenTerminal, worktreePath); launchError != nil {
+		return "", "Failed to launch " + chosenTerminal + ": " + launchError.Error()
+	}
+	return chosenTerminal, ""
 }
 
 // openClaudeCommand opens a terminal running the Claude launcher in the worktree.
@@ -117,9 +127,17 @@ func copyPathCommand(worktreePath string) tea.Cmd {
 	}
 }
 
+// WorktreeOpener names what a freshly created worktree should be opened with.
+type WorktreeOpener string
+
+const (
+	OpenerClaude   WorktreeOpener = "Claude"
+	OpenerTerminal WorktreeOpener = "Terminal"
+)
+
 // createBranchWorktreeCommand checks an existing branch out into a new worktree
-// under the primary worktree's worktrees/<branch>, then opens Claude in it.
-func createBranchWorktreeCommand(repositoryRoot string, branch string) tea.Cmd {
+// under the primary worktree's worktrees/<branch>, then opens it with opener.
+func createBranchWorktreeCommand(repositoryRoot string, branch string, opener WorktreeOpener) tea.Cmd {
 	return func() tea.Msg {
 		base := GetFirstWorktreePath(repositoryRoot)
 		if base == "" {
@@ -131,7 +149,7 @@ func createBranchWorktreeCommand(repositoryRoot string, branch string) tea.Cmd {
 		if !addResult.Succeeded() {
 			return worktreeCreatedMsg{failure: "git worktree add failed: " + strings.TrimSpace(addResult.Stderr)}
 		}
-		return worktreeCreatedMsg{note: creationNote(branch, worktreePath)}
+		return worktreeCreatedMsg{note: creationNote(branch, worktreePath, opener)}
 	}
 }
 
@@ -156,13 +174,20 @@ func createNamedWorktreeCommand(baseDirectory string, rawName string) tea.Cmd {
 		if !addResult.Succeeded() {
 			return worktreeCreatedMsg{failure: "git worktree add failed: " + strings.TrimSpace(addResult.Stderr)}
 		}
-		return worktreeCreatedMsg{note: creationNote(branch, worktreePath)}
+		return worktreeCreatedMsg{note: creationNote(branch, worktreePath, OpenerClaude)}
 	}
 }
 
-// creationNote opens Claude in the new worktree and returns the success message,
-// mirroring v1's _after_worktree_created.
-func creationNote(branch string, worktreePath string) string {
+// creationNote opens the new worktree with opener and returns the success
+// message, mirroring v1's _after_worktree_created.
+func creationNote(branch string, worktreePath string, opener WorktreeOpener) string {
+	if opener == OpenerTerminal {
+		terminalName, failure := openShellInTerminal(worktreePath)
+		if failure != "" {
+			return "Created worktree " + branch
+		}
+		return "Created worktree " + branch + " · opened " + terminalName
+	}
 	terminalName, failure := openClaudeInTerminal(worktreePath)
 	if failure != "" {
 		return "Created worktree " + branch
