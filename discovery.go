@@ -62,7 +62,7 @@ func newWorktreeInfoDefaults() WorktreeInfo {
 		ReviewDecision:   ReviewNone,
 		PullRequestLoad:  LoadIdle,
 		ComposeStatus:    ComposeNotConfigured,
-		ClaudeState:      ClaudeStateNone,
+		PiState:          PiStateNone,
 	}
 }
 
@@ -182,7 +182,7 @@ var kindDisplayOrder = map[WorktreeKind]int{
 }
 
 // DiscoverAll returns every worktree and branch-only row (excluding `main`),
-// ordered by kind, with Claude session state attached.
+// ordered by kind, with pi session state attached.
 func DiscoverAll(repositoryRoot string) ([]WorktreeInfo, error) {
 	worktrees, discoverError := DiscoverWorktrees(repositoryRoot)
 	if discoverError != nil {
@@ -207,7 +207,7 @@ func DiscoverAll(repositoryRoot string) ([]WorktreeInfo, error) {
 		return kindDisplayOrder[combined[leftIndex].Kind] < kindDisplayOrder[combined[rightIndex].Kind]
 	})
 	for index := range combined {
-		AttachClaudeState(&combined[index])
+		AttachPiState(&combined[index])
 	}
 	return combined, nil
 }

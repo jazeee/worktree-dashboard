@@ -94,10 +94,10 @@ func TestParseWorktreePorcelain(test *testing.T) {
 }
 
 func TestParseWorktreePorcelainLocked(test *testing.T) {
-	porcelain := "worktree /home/jaz/code/notable/vivaa/.claude/worktrees/primary-typescript7\n" +
+	porcelain := "worktree /home/jaz/code/notable/vivaa/.pi/worktrees/primary-typescript7\n" +
 		"HEAD 98ed963e\n" +
 		"branch refs/heads/worktree-primary-typescript7\n" +
-		"locked claude session primary-typescript7 (pid 3515922 start 135813619)\n" +
+		"locked pi session primary-typescript7 (pid 3515922 start 135813619)\n" +
 		"\n" +
 		"worktree /home/jaz/code/notable/vivaa/backend/worktrees/plain\n" +
 		"HEAD abc123\n" +
@@ -111,7 +111,7 @@ func TestParseWorktreePorcelainLocked(test *testing.T) {
 	if worktrees[0].LockState != LockLocked {
 		test.Errorf("first worktree should be locked, got %q", worktrees[0].LockState)
 	}
-	if worktrees[0].LockReason != "claude session primary-typescript7 (pid 3515922 start 135813619)" {
+	if worktrees[0].LockReason != "pi session primary-typescript7 (pid 3515922 start 135813619)" {
 		test.Errorf("lock reason parsed wrong: %q", worktrees[0].LockReason)
 	}
 	if worktrees[1].LockState != LockLocked || worktrees[1].LockReason != "" {
@@ -167,17 +167,17 @@ func TestComposeProjectNameFor(test *testing.T) {
 	}
 }
 
-func TestReadClaudeSessionState(test *testing.T) {
+func TestReadPiSessionState(test *testing.T) {
 	directory := test.TempDir()
 	contents := "id=session-42\nstate=working\nname=my task\nupdated=1700000000\n"
-	if writeError := os.WriteFile(filepath.Join(directory, ClaudeSessionStateFileName), []byte(contents), 0o644); writeError != nil {
+	if writeError := os.WriteFile(filepath.Join(directory, PiSessionStateFileName), []byte(contents), 0o644); writeError != nil {
 		test.Fatalf("write temp state: %v", writeError)
 	}
-	record := ReadClaudeSessionState(directory)
+	record := ReadPiSessionState(directory)
 	if record.SessionIdentifier != "session-42" {
 		test.Errorf("id = %q, want session-42", record.SessionIdentifier)
 	}
-	if record.State != ClaudeStateWorking {
+	if record.State != PiStateWorking {
 		test.Errorf("state = %q, want working", record.State)
 	}
 	if record.SessionName != "my task" {
@@ -188,9 +188,9 @@ func TestReadClaudeSessionState(test *testing.T) {
 	}
 }
 
-func TestReadClaudeSessionStateMissing(test *testing.T) {
-	record := ReadClaudeSessionState(test.TempDir())
-	if record.State != ClaudeStateNone {
+func TestReadPiSessionStateMissing(test *testing.T) {
+	record := ReadPiSessionState(test.TempDir())
+	if record.State != PiStateNone {
 		test.Errorf("missing file should yield None state, got %q", record.State)
 	}
 }
@@ -238,25 +238,25 @@ func TestDetermineDeletionEligibility(test *testing.T) {
 	}
 }
 
-func TestDetermineClaudeLiveness(test *testing.T) {
+func TestDeterminePiLiveness(test *testing.T) {
 	now := time.Unix(1700000000, 0)
 	cases := []struct {
 		name      string
-		state     ClaudeState
+		state     PiState
 		updatedAt time.Time
-		want      ClaudeLiveness
+		want      PiLiveness
 	}{
-		{"idle is inactive", ClaudeStateIdle, now, LivenessInactive},
-		{"working recent is active", ClaudeStateWorking, now.Add(-time.Minute), LivenessActive},
-		{"working old is stale", ClaudeStateWorking, now.Add(-3 * time.Hour), LivenessStale},
-		{"working no timestamp is active", ClaudeStateWorking, time.Time{}, LivenessActive},
-		{"waiting recent is active", ClaudeStateWaiting, now.Add(-time.Second), LivenessActive},
+		{"idle is inactive", PiStateIdle, now, LivenessInactive},
+		{"working recent is active", PiStateWorking, now.Add(-time.Minute), LivenessActive},
+		{"working old is stale", PiStateWorking, now.Add(-3 * time.Hour), LivenessStale},
+		{"working no timestamp is active", PiStateWorking, time.Time{}, LivenessActive},
+		{"waiting recent is active", PiStateWaiting, now.Add(-time.Second), LivenessActive},
 	}
 	for _, testCase := range cases {
 		worktree := newWorktreeInfoDefaults()
-		worktree.ClaudeState = testCase.state
-		worktree.ClaudeStateUpdatedAt = testCase.updatedAt
-		if got := DetermineClaudeLiveness(worktree, now); got != testCase.want {
+		worktree.PiState = testCase.state
+		worktree.PiStateUpdatedAt = testCase.updatedAt
+		if got := DeterminePiLiveness(worktree, now); got != testCase.want {
 			test.Errorf("%s: got %q, want %q", testCase.name, got, testCase.want)
 		}
 	}
@@ -289,10 +289,10 @@ func TestBuildTerminalCommand(test *testing.T) {
 		want     []string
 	}{
 		{"wezterm", nil, []string{"wezterm", "start", "--cwd", "/dir"}},
-		{"wezterm", []string{"claude", "x"}, []string{"wezterm", "start", "--cwd", "/dir", "--", "claude", "x"}},
-		{"kitty", []string{"claude"}, []string{"kitty", "--directory", "/dir", "claude"}},
-		{"gnome-terminal", []string{"claude"}, []string{"gnome-terminal", "--working-directory=/dir", "--", "claude"}},
-		{"xterm", []string{"claude"}, []string{"xterm", "-e", "claude"}},
+		{"wezterm", []string{"pi", "x"}, []string{"wezterm", "start", "--cwd", "/dir", "--", "pi", "x"}},
+		{"kitty", []string{"pi"}, []string{"kitty", "--directory", "/dir", "pi"}},
+		{"gnome-terminal", []string{"pi"}, []string{"gnome-terminal", "--working-directory=/dir", "--", "pi"}},
+		{"xterm", []string{"pi"}, []string{"xterm", "-e", "pi"}},
 	}
 	for _, testCase := range cases {
 		got := BuildTerminalCommand(testCase.terminal, "/dir", testCase.inner)
@@ -332,7 +332,7 @@ func TestMatchesSearch(test *testing.T) {
 	dashboard := NewDashboardModel("/repo")
 	worktree := newWorktreeInfoDefaults()
 	worktree.Branch = "jaz-feature-login"
-	worktree.ClaudeSessionName = "Fix the bug"
+	worktree.PiSessionName = "Fix the bug"
 
 	dashboard.searchPattern = ""
 	if !dashboard.matchesSearch(worktree) {
@@ -344,7 +344,7 @@ func TestMatchesSearch(test *testing.T) {
 	}
 	dashboard.searchPattern = "fix.*bug"
 	if !dashboard.matchesSearch(worktree) {
-		test.Errorf("regex over claude name failed")
+		test.Errorf("regex over pi name failed")
 	}
 	dashboard.searchPattern = "nomatch"
 	if dashboard.matchesSearch(worktree) {

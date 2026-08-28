@@ -8,23 +8,23 @@ import (
 	"time"
 )
 
-// claudestate.go reads each worktree's .claude-session-state file and derives its
-// liveness. Ported from v1's read_claude_session_state / attach_claude_state /
-// _claude_state_is_stale.
+// pistate.go reads each worktree's .pi-session-state file and derives its
+// liveness. Ported from v1's read_pi_session_state / attach_pi_state /
+// _pi_state_is_stale.
 
-// ClaudeSessionRecord is the parsed contents of a .claude-session-state file.
-type ClaudeSessionRecord struct {
+// PiSessionRecord is the parsed contents of a .pi-session-state file.
+type PiSessionRecord struct {
 	SessionIdentifier string
-	State             ClaudeState
+	State             PiState
 	UpdatedAt         time.Time
 	SessionName       string
 }
 
-// ReadClaudeSessionState parses <worktreePath>/.claude-session-state. Missing or
+// ReadPiSessionState parses <worktreePath>/.pi-session-state. Missing or
 // unparsable fields come back as their zero values.
-func ReadClaudeSessionState(worktreePath string) ClaudeSessionRecord {
-	record := ClaudeSessionRecord{State: ClaudeStateNone}
-	stateFilePath := filepath.Join(worktreePath, ClaudeSessionStateFileName)
+func ReadPiSessionState(worktreePath string) PiSessionRecord {
+	record := PiSessionRecord{State: PiStateNone}
+	stateFilePath := filepath.Join(worktreePath, PiSessionStateFileName)
 	contents, readError := os.ReadFile(stateFilePath)
 	if readError != nil {
 		return record
@@ -37,7 +37,7 @@ func ReadClaudeSessionState(worktreePath string) ClaudeSessionRecord {
 		}
 	}
 	record.SessionIdentifier = values["id"]
-	record.State = ClaudeState(values["state"])
+	record.State = PiState(values["state"])
 	record.SessionName = values["name"]
 	if rawUpdated := values["updated"]; rawUpdated != "" {
 		if epochSeconds, parseError := strconv.ParseInt(rawUpdated, 10, 64); parseError == nil {
@@ -47,29 +47,29 @@ func ReadClaudeSessionState(worktreePath string) ClaudeSessionRecord {
 	return record
 }
 
-// AttachClaudeState fills a worktree's Claude fields from its state file.
-func AttachClaudeState(worktree *WorktreeInfo) {
+// AttachPiState fills a worktree's Pi fields from its state file.
+func AttachPiState(worktree *WorktreeInfo) {
 	if worktree.Path == "" {
 		return
 	}
-	record := ReadClaudeSessionState(worktree.Path)
-	worktree.ClaudeSessionIdentifier = record.SessionIdentifier
-	worktree.ClaudeState = record.State
-	worktree.ClaudeStateUpdatedAt = record.UpdatedAt
-	worktree.ClaudeSessionName = record.SessionName
+	record := ReadPiSessionState(worktree.Path)
+	worktree.PiSessionIdentifier = record.SessionIdentifier
+	worktree.PiState = record.State
+	worktree.PiStateUpdatedAt = record.UpdatedAt
+	worktree.PiSessionName = record.SessionName
 }
 
-// DetermineClaudeLiveness classifies a session as Active, Stale, or Inactive.
+// DeterminePiLiveness classifies a session as Active, Stale, or Inactive.
 // Only working/waiting sessions can be Active or Stale; a record with no
 // timestamp is treated as Active (never stale), matching v1.
-func DetermineClaudeLiveness(worktree WorktreeInfo, now time.Time) ClaudeLiveness {
-	if worktree.ClaudeState != ClaudeStateWorking && worktree.ClaudeState != ClaudeStateWaiting {
+func DeterminePiLiveness(worktree WorktreeInfo, now time.Time) PiLiveness {
+	if worktree.PiState != PiStateWorking && worktree.PiState != PiStateWaiting {
 		return LivenessInactive
 	}
-	if worktree.ClaudeStateUpdatedAt.IsZero() {
+	if worktree.PiStateUpdatedAt.IsZero() {
 		return LivenessActive
 	}
-	if now.Sub(worktree.ClaudeStateUpdatedAt) > ClaudeStaleThreshold {
+	if now.Sub(worktree.PiStateUpdatedAt) > PiStaleThreshold {
 		return LivenessStale
 	}
 	return LivenessActive

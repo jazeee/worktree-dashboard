@@ -43,7 +43,7 @@ var (
 	styleBranchOnly   = lipgloss.NewStyle().Foreground(colorGreen).Italic(true)
 	styleRootBranch   = lipgloss.NewStyle().Foreground(colorGrey).Italic(true)
 
-	// Attention style for a waiting Claude session (inverse dark-red block).
+	// Attention style for a waiting pi session (inverse dark-red block).
 	styleAttention = lipgloss.NewStyle().
 			Foreground(colorWhite).
 			Background(attentionBackground).

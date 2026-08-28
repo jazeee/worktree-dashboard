@@ -33,7 +33,7 @@ type discoveryFailedMsg struct {
 	message string
 }
 
-// statusesCollectedMsg carries git+compose+claude fields for a previously
+// statusesCollectedMsg carries git+compose+pi fields for a previously
 // discovered set (the refresh path's second phase).
 type statusesCollectedMsg struct {
 	worktrees []WorktreeInfo
@@ -53,14 +53,14 @@ type pullRequestsFetchedMsg struct {
 	durationMillis int64
 }
 
-// claudeRefreshedMsg carries re-read Claude records keyed by ItemKey.
-type claudeRefreshedMsg struct {
-	records map[string]ClaudeSessionRecord
+// piRefreshedMsg carries re-read pi records keyed by ItemKey.
+type piRefreshedMsg struct {
+	records map[string]PiSessionRecord
 }
 
 // Tick messages for the self-rescheduling live tiers.
 type spinnerTickMsg time.Time
-type claudePollTickMsg time.Time
+type piPollTickMsg time.Time
 type worktreePollTickMsg time.Time
 type pullRequestPollTickMsg time.Time
 type traceTickMsg time.Time
@@ -75,7 +75,7 @@ type actionResultMsg struct {
 }
 
 // worktreeCreatedMsg reports the result of a create-worktree action, already
-// performed (including opening Claude) off the UI goroutine. On success failure
+// performed (including opening pi) off the UI goroutine. On success failure
 // is empty and note describes what happened; the model refreshes either way.
 type worktreeCreatedMsg struct {
 	failure string
@@ -104,7 +104,7 @@ func discoverWorktreesCommand(repositoryRoot string) tea.Cmd {
 	}
 }
 
-// collectStatusesInPlace fans out git status, compose, and claude collection over
+// collectStatusesInPlace fans out git status, compose, and pi collection over
 // worktrees with bounded concurrency, mutating the slice in place.
 func collectStatusesInPlace(worktrees []WorktreeInfo) {
 	runningProjects := ListRunningComposeProjects()
@@ -118,7 +118,7 @@ func collectStatusesInPlace(worktrees []WorktreeInfo) {
 			defer func() { <-semaphore }()
 			CollectGitStatus(&worktrees[position])
 			AttachComposeStatus(&worktrees[position], runningProjects)
-			AttachClaudeState(&worktrees[position])
+			AttachPiState(&worktrees[position])
 		}(index)
 	}
 	waitGroup.Wait()
@@ -188,18 +188,18 @@ func fetchPullRequestsCommand(worktrees []WorktreeInfo) tea.Cmd {
 	}
 }
 
-// refreshClaudeStatesCommand re-reads .claude-session-state for worktree rows.
-func refreshClaudeStatesCommand(worktrees []WorktreeInfo) tea.Cmd {
+// refreshPiStatesCommand re-reads .pi-session-state for worktree rows.
+func refreshPiStatesCommand(worktrees []WorktreeInfo) tea.Cmd {
 	snapshot := append([]WorktreeInfo(nil), worktrees...)
 	return func() tea.Msg {
-		records := map[string]ClaudeSessionRecord{}
+		records := map[string]PiSessionRecord{}
 		for _, worktree := range snapshot {
 			if worktree.Path == "" {
 				continue
 			}
-			records[ItemKey(worktree)] = ReadClaudeSessionState(worktree.Path)
+			records[ItemKey(worktree)] = ReadPiSessionState(worktree.Path)
 		}
-		return claudeRefreshedMsg{records: records}
+		return piRefreshedMsg{records: records}
 	}
 }
 
@@ -209,8 +209,8 @@ func scheduleSpinnerTick() tea.Cmd {
 	return tea.Tick(SpinnerTickInterval, func(now time.Time) tea.Msg { return spinnerTickMsg(now) })
 }
 
-func scheduleClaudePollTick() tea.Cmd {
-	return tea.Tick(ClaudePollInterval, func(now time.Time) tea.Msg { return claudePollTickMsg(now) })
+func schedulePiPollTick() tea.Cmd {
+	return tea.Tick(PiPollInterval, func(now time.Time) tea.Msg { return piPollTickMsg(now) })
 }
 
 func scheduleWorktreePollTick() tea.Cmd {

@@ -84,48 +84,48 @@ func isDeletable(worktree WorktreeInfo) bool {
 	return DetermineDeletionEligibility(worktree) == EligibilityDeletable
 }
 
-// ClaudeStateGlyph returns the colored glyph for a Claude state.
-func ClaudeStateGlyph(state ClaudeState, frame int, blink BlinkPhase) string {
+// PiStateGlyph returns the colored glyph for a pi state.
+func PiStateGlyph(state PiState, frame int, blink BlinkPhase) string {
 	switch state {
-	case ClaudeStateWorking:
+	case PiStateWorking:
 		return styleWorking.Render(CurrentSpinnerFrame(frame))
-	case ClaudeStateWaiting:
+	case PiStateWaiting:
 		if blink == BlinkVisible {
 			return styleAttention.Render("!")
 		}
 		return styleAttention.Render(" ")
-	case ClaudeStateIdle:
+	case PiStateIdle:
 		return styleIdle.Render("○")
 	default:
 		return styleDim.Render("○")
 	}
 }
 
-// FormatClaudeCell renders the Claude column for a row.
-func FormatClaudeCell(worktree WorktreeInfo, now time.Time, frame int) string {
-	if worktree.ClaudeState == ClaudeStateNone && worktree.ClaudeSessionIdentifier == "" {
+// FormatPiCell renders the pi column for a row.
+func FormatPiCell(worktree WorktreeInfo, now time.Time, frame int) string {
+	if worktree.PiState == PiStateNone && worktree.PiSessionIdentifier == "" {
 		return styleDim.Render("—")
 	}
-	displayState := worktree.ClaudeState
-	if displayState == ClaudeStateNone {
-		displayState = ClaudeStateIdle
+	displayState := worktree.PiState
+	if displayState == PiStateNone {
+		displayState = PiStateIdle
 	}
-	label := worktree.ClaudeSessionName
+	label := worktree.PiSessionName
 	if label == "" {
 		label = string(displayState)
 	}
-	// Prefix the permanent worktree index (the scr-NN number) so a Claude session
+	// Prefix the permanent worktree index (the scr-NN number) so a pi session
 	// can be tied to its checkout at a glance, e.g. "! 5 some name".
 	if indexLabel := PermanentWorktreeLabel(worktree); indexLabel != "" {
 		label = indexLabel + " " + label
 	}
-	liveness := DetermineClaudeLiveness(worktree, now)
+	liveness := DeterminePiLiveness(worktree, now)
 	if liveness == LivenessStale {
 		return styleDim.Render("○ " + label + " (stale)")
 	}
 	blink := DetermineBlinkPhase(now)
-	glyph := ClaudeStateGlyph(displayState, frame, blink)
-	if displayState == ClaudeStateWaiting {
+	glyph := PiStateGlyph(displayState, frame, blink)
+	if displayState == PiStateWaiting {
 		return glyph + styleAttention.Render(" "+label)
 	}
 	return glyph + " " + label
@@ -288,42 +288,42 @@ func FormatDockerStatus(worktree WorktreeInfo) string {
 	}
 }
 
-// BuildClaudeLines renders the detail-pane Claude section.
-func BuildClaudeLines(worktree WorktreeInfo, now time.Time, frame int) []string {
-	if worktree.ClaudeState == ClaudeStateNone && worktree.ClaudeSessionIdentifier == "" {
+// BuildPiLines renders the detail-pane Pi section.
+func BuildPiLines(worktree WorktreeInfo, now time.Time, frame int) []string {
+	if worktree.PiState == PiStateNone && worktree.PiSessionIdentifier == "" {
 		return []string{
-			styleHeading.Render("Claude"),
+			styleHeading.Render("pi"),
 			"  " + styleDim.Render("(no recorded session)"),
 		}
 	}
-	displayState := worktree.ClaudeState
-	if displayState == ClaudeStateNone {
-		displayState = ClaudeStateIdle
+	displayState := worktree.PiState
+	if displayState == PiStateNone {
+		displayState = PiStateIdle
 	}
-	liveness := DetermineClaudeLiveness(worktree, now)
+	liveness := DeterminePiLiveness(worktree, now)
 	blink := DetermineBlinkPhase(now)
-	glyph := ClaudeStateGlyph(displayState, frame, blink)
+	glyph := PiStateGlyph(displayState, frame, blink)
 	staleSuffix := ""
 	if liveness == LivenessStale {
 		staleSuffix = " " + styleDim.Render("(stale)")
 	}
-	waiting := displayState == ClaudeStateWaiting && liveness != LivenessStale
+	waiting := displayState == PiStateWaiting && liveness != LivenessStale
 	statusWord := " " + string(displayState)
 	if waiting {
 		statusWord = styleAttention.Render(" " + string(displayState))
 	}
-	name := worktree.ClaudeSessionName
+	name := worktree.PiSessionName
 	if name == "" {
 		name = styleDim.Render("(unnamed)")
 	} else if waiting {
-		name = styleAttention.Render(worktree.ClaudeSessionName)
+		name = styleAttention.Render(worktree.PiSessionName)
 	}
-	sessionValue := worktree.ClaudeSessionIdentifier
+	sessionValue := worktree.PiSessionIdentifier
 	if sessionValue == "" {
 		sessionValue = styleDim.Render("(none)")
 	}
 	return []string{
-		styleHeading.Render("Claude"),
+		styleHeading.Render("pi"),
 		"  " + styleBold.Render("Status:") + "   " + glyph + statusWord + staleSuffix,
 		"  " + styleBold.Render("Name:") + "     " + name,
 		"  " + styleBold.Render("Session:") + "  " + sessionValue,
@@ -367,7 +367,7 @@ func BuildDetailView(worktree WorktreeInfo, now time.Time, frame int) string {
 		"  " + RenderBranchCell(worktree),
 		"",
 	}
-	lines = append(lines, BuildClaudeLines(worktree, now, frame)...)
+	lines = append(lines, BuildPiLines(worktree, now, frame)...)
 	lines = append(lines,
 		"",
 		styleBold.Render("Path"),

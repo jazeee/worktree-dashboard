@@ -98,27 +98,27 @@ const (
 	ComposeStopped       ComposeStatus = "Stopped"
 )
 
-// ClaudeState mirrors the `state=` token in a .claude-session-state file. Its
+// PiState mirrors the `state=` token in a .pi-session-state file. Its
 // values are the raw file tokens (an external contract) so parsing is direct.
-type ClaudeState string
+type PiState string
 
 const (
-	ClaudeStateNone    ClaudeState = ""
-	ClaudeStateStart   ClaudeState = "start"
-	ClaudeStateWorking ClaudeState = "working"
-	ClaudeStateWaiting ClaudeState = "waiting"
-	ClaudeStateIdle    ClaudeState = "idle"
-	ClaudeStateEnded   ClaudeState = "ended"
+	PiStateNone    PiState = ""
+	PiStateStart   PiState = "start"
+	PiStateWorking PiState = "working"
+	PiStateWaiting PiState = "waiting"
+	PiStateIdle    PiState = "idle"
+	PiStateEnded   PiState = "ended"
 )
 
-// ClaudeLiveness is derived from ClaudeState plus the record's age. Replaces the
+// PiLiveness is derived from PiState plus the record's age. Replaces the
 // is_stale boolean computed ad hoc throughout v1.
-type ClaudeLiveness string
+type PiLiveness string
 
 const (
-	LivenessInactive ClaudeLiveness = "Inactive"
-	LivenessActive   ClaudeLiveness = "Active"
-	LivenessStale    ClaudeLiveness = "Stale"
+	LivenessInactive PiLiveness = "Inactive"
+	LivenessActive   PiLiveness = "Active"
+	LivenessStale    PiLiveness = "Stale"
 )
 
 // DeletionEligibility replaces v1's is_deletable boolean.
@@ -208,10 +208,10 @@ type WorktreeInfo struct {
 	ComposeProjectName string
 	ComposeStatus      ComposeStatus
 
-	ClaudeSessionIdentifier string
-	ClaudeState             ClaudeState
-	ClaudeStateUpdatedAt    time.Time
-	ClaudeSessionName       string
+	PiSessionIdentifier string
+	PiState             PiState
+	PiStateUpdatedAt    time.Time
+	PiSessionName       string
 
 	CollectionError string
 }
@@ -243,11 +243,11 @@ func IsProtectedBranch(branchName string) bool {
 
 // Tuning constants ported from v1.
 const (
-	// ClaudeStaleThreshold: a working/waiting record older than this belongs to a
+	// PiStaleThreshold: a working/waiting record older than this belongs to a
 	// session whose terminal died before its Stop/SessionEnd hook fired.
-	ClaudeStaleThreshold = 2 * time.Hour
+	PiStaleThreshold = 2 * time.Hour
 
-	ClaudePollInterval      = 500 * time.Millisecond
+	PiPollInterval          = 500 * time.Millisecond
 	SpinnerTickInterval     = 125 * time.Millisecond
 	WorktreePollInterval    = 30 * time.Second
 	PullRequestPollInterval = 15 * time.Minute
@@ -267,8 +267,8 @@ const (
 	DefaultCommandTimeout = 10 * time.Second
 )
 
-// SpinnerFrames animate working/waiting Claude states and in-flight PR fetches.
+// SpinnerFrames animate working/waiting pi states and in-flight PR fetches.
 var SpinnerFrames = []rune("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
 
-// ClaudeSessionStateFileName is the per-worktree state file written by the hooks.
-const ClaudeSessionStateFileName = ".claude-session-state"
+// PiSessionStateFileName is the per-worktree state file written by the hooks.
+const PiSessionStateFileName = ".pi-session-state"

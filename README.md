@@ -5,8 +5,8 @@ A terminal dashboard for git worktrees, written in Go on
 
 It discovers every worktree of a repository and presents them in one screen,
 enriching each row with git status, pull-request state, docker-compose status,
-and live Claude session state. From the same screen you can open a worktree
-(VS Code, a terminal, or Claude), open its pull request, create a new worktree,
+and live pi session state. From the same screen you can open a worktree
+(VS Code, a terminal, or pi), open its pull request, create a new worktree,
 and delete one. The renderer is event-driven, so it repaints only when state
 changes and idles at ~0–1% of a core with a flat, small memory footprint.
 
@@ -42,7 +42,7 @@ rebuild after every change or you will keep running the old binary.
 | `o`           | open the pull request in the browser              |
 | `v`           | open the worktree in VS Code                       |
 | `t`           | open a terminal in the worktree                    |
-| `c`           | open Claude (resume or fresh) in a terminal        |
+| `p`           | open pi (resume or fresh) in a terminal            |
 | `n`           | new worktree (input dialog, branched off `origin/main`) |
 | `y` / `ctrl+c`| copy the worktree path (`ctrl+c` is **copy**, not quit) |
 | `d`           | delete the worktree (confirm dialog)               |
@@ -62,7 +62,7 @@ without toggling, if your terminal supports it.)
 Each tier is a self-rescheduling `tea.Tick`; a worktree/PR tick that fires while
 a poll is still running is skipped and counted:
 
-- Claude session state — 1 s
+- pi session state — 1 s
 - spinner frame — 0.125 s (pure frame increment; only repaints while a row animates)
 - worktree rediscovery + status — 30 s
 - pull requests — 15 min
@@ -75,7 +75,7 @@ a poll is still running is skipped and counted:
   cells. The table is rendered by hand with lipgloss
   (`Width(w).MaxWidth(w).Inline(true)`), preserving per-cell color.
 - **Booleans replaced by string-union enum types** (mirroring TypeScript
-  `value: 'A' | 'B'`) throughout — e.g. `PullRequestState`, `ClaudeLiveness`,
+  `value: 'A' | 'B'`) throughout — e.g. `PullRequestState`, `PiLiveness`,
   `WorktreeKind`, `LayoutOrientation`, `PollActivity`.
 - **Responsive layout.** `tea.WindowSizeMsg` switches between a side-by-side
   table+detail split and a stacked layout at a width threshold.

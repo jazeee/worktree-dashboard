@@ -13,7 +13,7 @@ import (
 
 // commandrunner.go wraps os/exec: a timeout-bounded synchronous runner for
 // git/gh/docker, plus fire-and-forget launchers for terminals, editors, and the
-// Claude session script. Ported from v1's run_command / clipboard / terminal
+// pi session script. Ported from v1's run_command / clipboard / terminal
 // helpers.
 
 // CommandResult captures a finished subprocess. ExitCode uses 124 for a timeout
@@ -210,7 +210,7 @@ func SelectTerminalCommand(workingDirectory string, innerCommand []string) (argv
 
 // LaunchDetachedProcess starts argv in workingDirectory in its own session, with
 // standard streams sent to /dev/null, and does not wait. Used for terminals, the
-// editor, the PR opener, and the Claude launcher.
+// editor, the PR opener, and the pi launcher.
 func LaunchDetachedProcess(argv []string, workingDirectory string) error {
 	if len(argv) == 0 {
 		return errors.New("no command to launch")
@@ -245,7 +245,7 @@ func OpenUrl(url string) error {
 
 // PtyxisNewWindowHelperPath is ~/.local/bin/ptyxis-new-window.sh, the KWin helper
 // that spawns a ptyxis window on the largest screen so multi-monitor fractional
-// scaling doesn't mis-size it. Mirrors ClaudeSessionLauncherPath.
+// scaling doesn't mis-size it. Mirrors PiSessionLauncherPath.
 func PtyxisNewWindowHelperPath() string {
 	home, homeError := os.UserHomeDir()
 	if homeError != nil {
@@ -268,13 +268,13 @@ func LaunchTerminalWindow(argv []string, terminalName string, workingDirectory s
 	return LaunchDetachedProcess(argv, workingDirectory)
 }
 
-// ClaudeSessionLauncherPath is ~/.local/bin/claude-worktree-session.sh, the
-// resume-or-fresh Claude launcher opened by the `c` action. Ported from v1's
-// CLAUDE_SESSION_LAUNCHER.
-func ClaudeSessionLauncherPath() string {
+// PiSessionLauncherPath is ~/.local/bin/pi-worktree-session.sh, the
+// resume-or-fresh pi launcher opened by the `p` action. Ported from v1's
+// PI_SESSION_LAUNCHER.
+func PiSessionLauncherPath() string {
 	home, homeError := os.UserHomeDir()
 	if homeError != nil {
 		home = os.Getenv("HOME")
 	}
-	return filepath.Join(home, ".local", "bin", "claude-worktree-session.sh")
+	return filepath.Join(home, ".local", "bin", "pi-worktree-session.sh")
 }

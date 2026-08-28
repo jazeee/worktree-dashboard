@@ -11,7 +11,7 @@ import (
 )
 
 // actions.go holds the tea.Cmd constructors for user-triggered actions (open PR,
-// editor, terminal, Claude; copy; create; delete). Each runs off the UI goroutine
+// editor, terminal, pi; copy; create; delete). Each runs off the UI goroutine
 // and returns a single result message. Ported from v1's action_* handlers.
 
 // worktreeNameSanitizer strips characters not allowed in a branch/worktree name.
@@ -73,26 +73,26 @@ func openShellInTerminal(worktreePath string) (terminalName string, failure stri
 	return chosenTerminal, ""
 }
 
-// openClaudeCommand opens a terminal running the Claude launcher in the worktree.
+// openPiCommand opens a terminal running the pi launcher in the worktree.
 // resumeWord is "resuming" or "fresh", chosen by the caller from the row's state.
-func openClaudeCommand(worktreePath string, resumeWord string) tea.Cmd {
+func openPiCommand(worktreePath string, resumeWord string) tea.Cmd {
 	return func() tea.Msg {
-		terminalName, failure := openClaudeInTerminal(worktreePath)
+		terminalName, failure := openPiInTerminal(worktreePath)
 		if failure != "" {
 			return actionResultMsg{text: failure, severity: SeverityError}
 		}
 		return actionResultMsg{
-			text:     fmt.Sprintf("Opening Claude (%s) in %s: %s", resumeWord, terminalName, worktreePath),
+			text:     fmt.Sprintf("Opening pi (%s) in %s: %s", resumeWord, terminalName, worktreePath),
 			severity: SeverityInfo,
 		}
 	}
 }
 
-// openClaudeInTerminal launches the Claude session script in a terminal at path.
+// openPiInTerminal launches the pi session script in a terminal at path.
 // On success it returns the terminal name and an empty failure; otherwise the
 // terminal name is empty and failure describes what went wrong.
-func openClaudeInTerminal(worktreePath string) (terminalName string, failure string) {
-	launcher := ClaudeSessionLauncherPath()
+func openPiInTerminal(worktreePath string) (terminalName string, failure string) {
+	launcher := PiSessionLauncherPath()
 	if !isRegularFile(launcher) {
 		return "", "Launcher not found: " + launcher
 	}
@@ -131,7 +131,7 @@ func copyPathCommand(worktreePath string) tea.Cmd {
 type WorktreeOpener string
 
 const (
-	OpenerClaude   WorktreeOpener = "Claude"
+	OpenerPi       WorktreeOpener = "Pi"
 	OpenerTerminal WorktreeOpener = "Terminal"
 )
 
@@ -154,7 +154,7 @@ func createBranchWorktreeCommand(repositoryRoot string, branch string, opener Wo
 }
 
 // createNamedWorktreeCommand branches a fresh worktree off origin/main and opens
-// Claude in it. rawName is the user's typed name from the input dialog.
+// pi in it. rawName is the user's typed name from the input dialog.
 func createNamedWorktreeCommand(baseDirectory string, rawName string) tea.Cmd {
 	return func() tea.Msg {
 		name := whitespaceRun.ReplaceAllString(strings.TrimSpace(rawName), "-")
@@ -174,7 +174,7 @@ func createNamedWorktreeCommand(baseDirectory string, rawName string) tea.Cmd {
 		if !addResult.Succeeded() {
 			return worktreeCreatedMsg{failure: "git worktree add failed: " + strings.TrimSpace(addResult.Stderr)}
 		}
-		return worktreeCreatedMsg{note: creationNote(branch, worktreePath, OpenerClaude)}
+		return worktreeCreatedMsg{note: creationNote(branch, worktreePath, OpenerPi)}
 	}
 }
 
@@ -188,11 +188,11 @@ func creationNote(branch string, worktreePath string, opener WorktreeOpener) str
 		}
 		return "Created worktree " + branch + " · opened " + terminalName
 	}
-	terminalName, failure := openClaudeInTerminal(worktreePath)
+	terminalName, failure := openPiInTerminal(worktreePath)
 	if failure != "" {
 		return "Created worktree " + branch
 	}
-	return "Created worktree " + branch + " · opened Claude in " + terminalName
+	return "Created worktree " + branch + " · opened pi in " + terminalName
 }
 
 // sanitizeSegment turns an arbitrary string into a safe path segment, falling

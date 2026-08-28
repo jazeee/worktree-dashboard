@@ -38,7 +38,7 @@ var summaryColumns = []columnSpec{
 	{"Files", 6},
 	{"State", 10},
 	{"Review", 12},
-	{"Claude", 22},
+	{"pi", 22},
 	{"Recommendation", 14},
 }
 
@@ -85,7 +85,7 @@ type DashboardModel struct {
 // NewDashboardModel builds the initial model for a repository root.
 func NewDashboardModel(repositoryRoot string) DashboardModel {
 	searchField := textinput.New()
-	searchField.Placeholder = "search branch / claude name / PR number (regex) — Enter to keep, Esc to clear"
+	searchField.Placeholder = "search branch / pi name / PR number (regex) — Enter to keep, Esc to clear"
 	searchField.CharLimit = 200
 
 	return DashboardModel{
@@ -108,7 +108,7 @@ func (dashboard DashboardModel) Init() tea.Cmd {
 	return tea.Batch(
 		discoverWorktreesCommand(dashboard.repositoryRoot),
 		scheduleSpinnerTick(),
-		scheduleClaudePollTick(),
+		schedulePiPollTick(),
 		scheduleWorktreePollTick(),
 		schedulePullRequestPollTick(),
 		scheduleTraceTick(),
@@ -153,13 +153,13 @@ func (dashboard DashboardModel) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return dashboard.handleWorktreesResolved(typed)
 	case pullRequestsFetchedMsg:
 		return dashboard.handlePullRequestsFetched(typed)
-	case claudeRefreshedMsg:
-		return dashboard.handleClaudeRefreshed(typed)
+	case piRefreshedMsg:
+		return dashboard.handlePiRefreshed(typed)
 
 	case spinnerTickMsg:
 		return dashboard.handleSpinnerTick()
-	case claudePollTickMsg:
-		return dashboard, tea.Batch(refreshClaudeStatesCommand(dashboard.worktrees), scheduleClaudePollTick())
+	case piPollTickMsg:
+		return dashboard, tea.Batch(refreshPiStatesCommand(dashboard.worktrees), schedulePiPollTick())
 	case worktreePollTickMsg:
 		return dashboard.handleWorktreePollTick()
 	case pullRequestPollTickMsg:
@@ -307,8 +307,8 @@ func (dashboard DashboardModel) handleBrowsingKey(key tea.KeyMsg) (tea.Model, te
 		})
 	case "t":
 		return dashboard.handleOpenTerminal()
-	case "c":
-		return dashboard.handleOpenClaude()
+	case "p":
+		return dashboard.handleOpenPi()
 	case "n":
 		return dashboard.handleNewWorktree()
 	case "y", "ctrl+c":
@@ -435,7 +435,7 @@ func (dashboard DashboardModel) handleOpenTerminal() (tea.Model, tea.Cmd) {
 	return dashboard, openInTerminalCommand(worktree.Path)
 }
 
-func (dashboard DashboardModel) handleOpenClaude() (tea.Model, tea.Cmd) {
+func (dashboard DashboardModel) handleOpenPi() (tea.Model, tea.Cmd) {
 	worktree, found := dashboard.currentWorktree()
 	if !found {
 		return dashboard, nil
@@ -443,16 +443,16 @@ func (dashboard DashboardModel) handleOpenClaude() (tea.Model, tea.Cmd) {
 	if worktree.Path == "" {
 		if worktree.Branch != "" {
 			dashboard.setNotification("Creating worktree for '"+worktree.Branch+"'…", SeverityInfo)
-			return dashboard, createBranchWorktreeCommand(dashboard.repositoryRoot, worktree.Branch, OpenerClaude)
+			return dashboard, createBranchWorktreeCommand(dashboard.repositoryRoot, worktree.Branch, OpenerPi)
 		}
 		dashboard.setNotification("No worktree or branch to open", SeverityWarning)
 		return dashboard, dashboard.notificationClearCommand()
 	}
 	resumeWord := "fresh"
-	if worktree.ClaudeSessionIdentifier != "" {
+	if worktree.PiSessionIdentifier != "" {
 		resumeWord = "resuming"
 	}
-	return dashboard, openClaudeCommand(worktree.Path, resumeWord)
+	return dashboard, openPiCommand(worktree.Path, resumeWord)
 }
 
 func (dashboard DashboardModel) handleNewWorktree() (tea.Model, tea.Cmd) {
@@ -461,7 +461,7 @@ func (dashboard DashboardModel) handleNewWorktree() (tea.Model, tea.Cmd) {
 		return dashboard, nil
 	}
 	if worktree.Path == "" && worktree.Branch != "" {
-		return dashboard, createBranchWorktreeCommand(dashboard.repositoryRoot, worktree.Branch, OpenerClaude)
+		return dashboard, createBranchWorktreeCommand(dashboard.repositoryRoot, worktree.Branch, OpenerPi)
 	}
 	baseDirectory := worktree.Path
 	if baseDirectory == "" {
@@ -608,7 +608,7 @@ func (dashboard DashboardModel) handlePullRequestsFetched(message pullRequestsFe
 	return dashboard, nil
 }
 
-func (dashboard DashboardModel) handleClaudeRefreshed(message claudeRefreshedMsg) (tea.Model, tea.Cmd) {
+func (dashboard DashboardModel) handlePiRefreshed(message piRefreshedMsg) (tea.Model, tea.Cmd) {
 	changed := false
 	for index := range dashboard.worktrees {
 		record, present := message.records[ItemKey(dashboard.worktrees[index])]
@@ -616,18 +616,18 @@ func (dashboard DashboardModel) handleClaudeRefreshed(message claudeRefreshedMsg
 			continue
 		}
 		worktree := &dashboard.worktrees[index]
-		timeSensitive := worktree.ClaudeState == ClaudeStateWorking || worktree.ClaudeState == ClaudeStateWaiting
-		if worktree.ClaudeSessionIdentifier != record.SessionIdentifier ||
-			worktree.ClaudeState != record.State ||
-			!worktree.ClaudeStateUpdatedAt.Equal(record.UpdatedAt) ||
-			worktree.ClaudeSessionName != record.SessionName {
+		timeSensitive := worktree.PiState == PiStateWorking || worktree.PiState == PiStateWaiting
+		if worktree.PiSessionIdentifier != record.SessionIdentifier ||
+			worktree.PiState != record.State ||
+			!worktree.PiStateUpdatedAt.Equal(record.UpdatedAt) ||
+			worktree.PiSessionName != record.SessionName {
 			changed = true
 		}
-		worktree.ClaudeSessionIdentifier = record.SessionIdentifier
-		worktree.ClaudeState = record.State
-		worktree.ClaudeStateUpdatedAt = record.UpdatedAt
-		worktree.ClaudeSessionName = record.SessionName
-		if timeSensitive || worktree.ClaudeState == ClaudeStateWorking || worktree.ClaudeState == ClaudeStateWaiting {
+		worktree.PiSessionIdentifier = record.SessionIdentifier
+		worktree.PiState = record.State
+		worktree.PiStateUpdatedAt = record.UpdatedAt
+		worktree.PiSessionName = record.SessionName
+		if timeSensitive || worktree.PiState == PiStateWorking || worktree.PiState == PiStateWaiting {
 			changed = true
 		}
 	}
@@ -641,9 +641,9 @@ func (dashboard DashboardModel) handleSpinnerTick() (tea.Model, tea.Cmd) {
 	now := time.Now()
 	animating := false
 	for _, worktree := range dashboard.worktrees {
-		claudeActive := (worktree.ClaudeState == ClaudeStateWorking || worktree.ClaudeState == ClaudeStateWaiting) &&
-			DetermineClaudeLiveness(worktree, now) != LivenessStale
-		if claudeActive || worktree.PullRequestLoad == LoadInProgress {
+		piActive := (worktree.PiState == PiStateWorking || worktree.PiState == PiStateWaiting) &&
+			DeterminePiLiveness(worktree, now) != LivenessStale
+		if piActive || worktree.PullRequestLoad == LoadInProgress {
 			animating = true
 			break
 		}
@@ -821,7 +821,7 @@ func (dashboard DashboardModel) matchesSearch(worktree WorktreeInfo) bool {
 	if dashboard.searchPattern == "" {
 		return true
 	}
-	haystack := worktree.Branch + "\n" + worktree.ClaudeSessionName
+	haystack := worktree.Branch + "\n" + worktree.PiSessionName
 	if worktree.PullRequestNumber > 0 {
 		haystack += "\n#" + strconv.Itoa(worktree.PullRequestNumber) + "\n" + worktree.PullRequestTitle
 	}
@@ -874,7 +874,7 @@ func (dashboard *DashboardModel) filterTombstoned(items []WorktreeInfo) []Worktr
 	return kept
 }
 
-// mergeStatusFields copies git/compose/claude fields from a freshly collected
+// mergeStatusFields copies git/compose/pi fields from a freshly collected
 // record onto an existing row, leaving PR fields and load state untouched.
 func mergeStatusFields(destination *WorktreeInfo, source WorktreeInfo) {
 	destination.Cleanliness = source.Cleanliness
@@ -888,10 +888,10 @@ func mergeStatusFields(destination *WorktreeInfo, source WorktreeInfo) {
 	destination.ComposeScriptPath = source.ComposeScriptPath
 	destination.ComposeProjectName = source.ComposeProjectName
 	destination.ComposeStatus = source.ComposeStatus
-	destination.ClaudeSessionIdentifier = source.ClaudeSessionIdentifier
-	destination.ClaudeState = source.ClaudeState
-	destination.ClaudeStateUpdatedAt = source.ClaudeStateUpdatedAt
-	destination.ClaudeSessionName = source.ClaudeSessionName
+	destination.PiSessionIdentifier = source.PiSessionIdentifier
+	destination.PiState = source.PiState
+	destination.PiStateUpdatedAt = source.PiStateUpdatedAt
+	destination.PiSessionName = source.PiSessionName
 	destination.CollectionError = source.CollectionError
 }
 
@@ -1020,7 +1020,7 @@ func (dashboard DashboardModel) renderRow(worktree WorktreeInfo, now time.Time) 
 		padCell(FormatDirtyCell(worktree), summaryColumns[2].width),
 		padCell(FormatPullRequestStateCell(worktree, dashboard.spinnerFrame), summaryColumns[3].width),
 		padCell(FormatReviewCell(worktree), summaryColumns[4].width),
-		padCell(FormatClaudeCell(worktree, now, dashboard.spinnerFrame), summaryColumns[5].width),
+		padCell(FormatPiCell(worktree, now, dashboard.spinnerFrame), summaryColumns[5].width),
 		padCell(FormatRecommendationCell(worktree), summaryColumns[6].width),
 	}
 	return strings.Join(cells, cellSeparator)
@@ -1072,7 +1072,7 @@ func (dashboard DashboardModel) renderStatusLine() string {
 			return styleClean.Render(dashboard.notification)
 		}
 	}
-	return styleDim.Render("q quit · r refresh · / search · o PR · v code · t term · c claude · n new · y copy · d delete · m mouse")
+	return styleDim.Render("q quit · r refresh · / search · o PR · v code · t term · p pi · n new · y copy · d delete · m mouse")
 }
 
 // padCell fixes a rendered cell to width, truncating with an ellipsis. lipgloss's
