@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-// pistate.go reads each worktree's .pi-session-state file and derives its
+// pistate.go reads each worktree's .claude-session-state file and derives its
 // liveness. Ported from v1's read_pi_session_state / attach_pi_state /
 // _pi_state_is_stale.
 
-// PiSessionRecord is the parsed contents of a .pi-session-state file.
+// PiSessionRecord is the parsed contents of a .claude-session-state file.
 type PiSessionRecord struct {
 	SessionIdentifier string
 	State             PiState
@@ -20,7 +20,7 @@ type PiSessionRecord struct {
 	SessionName       string
 }
 
-// ReadPiSessionState parses <worktreePath>/.pi-session-state. Missing or
+// ReadPiSessionState parses <worktreePath>/.claude-session-state. Missing or
 // unparsable fields come back as their zero values.
 func ReadPiSessionState(worktreePath string) PiSessionRecord {
 	record := PiSessionRecord{State: PiStateNone}

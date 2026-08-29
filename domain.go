@@ -98,7 +98,7 @@ const (
 	ComposeStopped       ComposeStatus = "Stopped"
 )
 
-// PiState mirrors the `state=` token in a .pi-session-state file. Its
+// PiState mirrors the `state=` token in a .claude-session-state file. Its
 // values are the raw file tokens (an external contract) so parsing is direct.
 type PiState string
 
@@ -271,4 +271,4 @@ const (
 var SpinnerFrames = []rune("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
 
 // PiSessionStateFileName is the per-worktree state file written by the hooks.
-const PiSessionStateFileName = ".pi-session-state"
+const PiSessionStateFileName = ".claude-session-state"

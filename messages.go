@@ -188,7 +188,7 @@ func fetchPullRequestsCommand(worktrees []WorktreeInfo) tea.Cmd {
 	}
 }
 
-// refreshPiStatesCommand re-reads .pi-session-state for worktree rows.
+// refreshPiStatesCommand re-reads .claude-session-state for worktree rows.
 func refreshPiStatesCommand(worktrees []WorktreeInfo) tea.Cmd {
 	snapshot := append([]WorktreeInfo(nil), worktrees...)
 	return func() tea.Msg {
