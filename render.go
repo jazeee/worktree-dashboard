@@ -150,13 +150,13 @@ func FormatPiCell(worktree WorktreeInfo, now time.Time, frame int) string {
 	blink := DetermineBlinkPhase(now)
 	glyph := PiStateGlyph(displayState, frame, blink)
 	if displayState == PiStateWaiting {
-		return glyph + styleAttention.Render(" "+label)
+		return glyph + " " + styleAttention.Render(label)
 	}
 	if displayState == PiStateWorking {
-		return glyph + PiWorkingStyle(frame).Render(" "+label)
+		return glyph + " " + PiWorkingStyle(frame).Render(label)
 	}
 	if doneStyle, done := PiDoneStyle(displayState, worktree.PiStateUpdatedAt, now); done {
-		return glyph + doneStyle.Render(" "+label)
+		return glyph + " " + doneStyle.Render(label)
 	}
 	return glyph + " " + label
 }
@@ -350,7 +350,7 @@ func BuildPiLines(worktree WorktreeInfo, now time.Time, frame int) []string {
 	highlighted := waiting || working || done
 	statusWord := " " + string(displayState)
 	if highlighted {
-		statusWord = highlight.Render(" " + string(displayState))
+		statusWord = " " + highlight.Render(string(displayState))
 	}
 	name := worktree.PiSessionName
 	if name == "" {
