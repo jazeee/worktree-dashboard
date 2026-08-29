@@ -1,6 +1,11 @@
 package main
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"fmt"
+	"math"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 // theme.go centralizes every color and text style. v1 used Rich markup like
 // "[yellow]…[/]"; here those become named lipgloss styles so the palette lives
@@ -51,7 +56,7 @@ var (
 
 	// Working styles cycle under the spinner so an in-progress pi session pulses
 	// and catches the eye across a full screen of rows.
-	stylesWorking = buildBlockStyles([]lipgloss.Color{"#5f3f00", "#7a5200", "#946400", "#7a5200"})
+	stylesWorking = buildPulseStyles(0x3a2600, 0xb87c00, 16)
 
 	// Done styles for an idle pi session, one per PiDoneFadeStep: the green block
 	// fades to black as the finished turn goes unread.
@@ -91,6 +96,29 @@ func StateColorFor(pullRequestState PullRequestState) lipgloss.Color {
 	default:
 		return colorWhite
 	}
+}
+
+// buildPulseStyles interpolates a triangle wave between two packed RGB values:
+// steps shades up, then back down without repeating the endpoints.
+func buildPulseStyles(low int, high int, steps int) []lipgloss.Style {
+	backgrounds := make([]lipgloss.Color, 0, 2*steps-2)
+	for step := 0; step < steps; step++ {
+		backgrounds = append(backgrounds, blendColor(low, high, float64(step)/float64(steps-1)))
+	}
+	for step := steps - 2; step > 0; step-- {
+		backgrounds = append(backgrounds, backgrounds[step])
+	}
+	return buildBlockStyles(backgrounds)
+}
+
+// blendColor mixes two packed 0xRRGGBB values, with ratio 0 giving low and 1 high.
+func blendColor(low int, high int, ratio float64) lipgloss.Color {
+	channel := func(shift uint) int {
+		lowChannel := float64((low >> shift) & 0xff)
+		highChannel := float64((high >> shift) & 0xff)
+		return int(math.Round(lowChannel + (highChannel-lowChannel)*ratio))
+	}
+	return lipgloss.Color(fmt.Sprintf("#%02x%02x%02x", channel(16), channel(8), channel(0)))
 }
 
 func buildBlockStyles(backgrounds []lipgloss.Color) []lipgloss.Style {

@@ -102,9 +102,9 @@ func PiStateGlyph(state PiState, frame int, blink BlinkPhase) string {
 }
 
 // PiWorkingStyle returns the pulsing highlight for a working session, advancing
-// one shade every other spinner frame.
+// one shade per spinner frame.
 func PiWorkingStyle(frame int) lipgloss.Style {
-	return stylesWorking[(frame/2)%len(stylesWorking)]
+	return stylesWorking[frame%len(stylesWorking)]
 }
 
 // PiDoneStyle returns the highlight for an idle session — a finished turn

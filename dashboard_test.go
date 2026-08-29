@@ -650,13 +650,17 @@ func TestPiDoneStyle(test *testing.T) {
 
 func TestPiWorkingStyleCycles(test *testing.T) {
 	first := fmt.Sprintf("%v", PiWorkingStyle(0).GetBackground())
-	if fmt.Sprintf("%v", PiWorkingStyle(1).GetBackground()) != first {
-		test.Errorf("the shade should hold for two frames")
+	if fmt.Sprintf("%v", PiWorkingStyle(1).GetBackground()) == first {
+		test.Errorf("the shade should advance every frame")
 	}
-	if fmt.Sprintf("%v", PiWorkingStyle(2).GetBackground()) == first {
-		test.Errorf("the shade should advance after two frames")
-	}
-	if fmt.Sprintf("%v", PiWorkingStyle(2*len(stylesWorking)).GetBackground()) != first {
+	if fmt.Sprintf("%v", PiWorkingStyle(len(stylesWorking)).GetBackground()) != first {
 		test.Errorf("the cycle should wrap")
+	}
+	seen := map[string]struct{}{}
+	for frame := 0; frame < len(stylesWorking); frame++ {
+		seen[fmt.Sprintf("%v", PiWorkingStyle(frame).GetBackground())] = struct{}{}
+	}
+	if len(seen) < len(stylesWorking)/2 {
+		test.Errorf("the pulse should sweep a smooth range of shades, got %d", len(seen))
 	}
 }
