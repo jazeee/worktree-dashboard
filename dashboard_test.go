@@ -647,3 +647,16 @@ func TestPiDoneStyle(test *testing.T) {
 		previous = background
 	}
 }
+
+func TestPiWorkingStyleCycles(test *testing.T) {
+	first := fmt.Sprintf("%v", PiWorkingStyle(0).GetBackground())
+	if fmt.Sprintf("%v", PiWorkingStyle(1).GetBackground()) != first {
+		test.Errorf("the shade should hold for two frames")
+	}
+	if fmt.Sprintf("%v", PiWorkingStyle(2).GetBackground()) == first {
+		test.Errorf("the shade should advance after two frames")
+	}
+	if fmt.Sprintf("%v", PiWorkingStyle(2*len(stylesWorking)).GetBackground()) != first {
+		test.Errorf("the cycle should wrap")
+	}
+}

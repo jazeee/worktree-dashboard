@@ -49,9 +49,13 @@ var (
 			Background(attentionBackground).
 			Bold(true)
 
+	// Working styles cycle under the spinner so an in-progress pi session pulses
+	// and catches the eye across a full screen of rows.
+	stylesWorking = buildBlockStyles([]lipgloss.Color{"#5f3f00", "#7a5200", "#946400", "#7a5200"})
+
 	// Done styles for an idle pi session, one per PiDoneFadeStep: the green block
 	// fades to black as the finished turn goes unread.
-	stylesDone = buildDoneStyles([]lipgloss.Color{"#005f00", "#004000", "#002800", "#001200"})
+	stylesDone = buildBlockStyles([]lipgloss.Color{"#005f00", "#004000", "#002800", "#001200"})
 
 	// Detail-pane border and counts bar.
 	styleDetailBorder = lipgloss.NewStyle().
@@ -89,7 +93,7 @@ func StateColorFor(pullRequestState PullRequestState) lipgloss.Color {
 	}
 }
 
-func buildDoneStyles(backgrounds []lipgloss.Color) []lipgloss.Style {
+func buildBlockStyles(backgrounds []lipgloss.Color) []lipgloss.Style {
 	styles := make([]lipgloss.Style, 0, len(backgrounds))
 	for _, background := range backgrounds {
 		styles = append(styles, lipgloss.NewStyle().Foreground(colorWhite).Background(background).Bold(true))

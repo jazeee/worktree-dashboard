@@ -101,6 +101,12 @@ func PiStateGlyph(state PiState, frame int, blink BlinkPhase) string {
 	}
 }
 
+// PiWorkingStyle returns the pulsing highlight for a working session, advancing
+// one shade every other spinner frame.
+func PiWorkingStyle(frame int) lipgloss.Style {
+	return stylesWorking[(frame/2)%len(stylesWorking)]
+}
+
 // PiDoneStyle returns the highlight for an idle session — a finished turn
 // waiting to be read — fading one shade per PiDoneFadeStep. The second result is
 // false once the session has gone unread past the whole fade window.
@@ -145,6 +151,9 @@ func FormatPiCell(worktree WorktreeInfo, now time.Time, frame int) string {
 	glyph := PiStateGlyph(displayState, frame, blink)
 	if displayState == PiStateWaiting {
 		return glyph + styleAttention.Render(" "+label)
+	}
+	if displayState == PiStateWorking {
+		return glyph + PiWorkingStyle(frame).Render(" "+label)
 	}
 	if doneStyle, done := PiDoneStyle(displayState, worktree.PiStateUpdatedAt, now); done {
 		return glyph + doneStyle.Render(" "+label)
@@ -329,19 +338,24 @@ func BuildPiLines(worktree WorktreeInfo, now time.Time, frame int) []string {
 		staleSuffix = " " + styleDim.Render("(stale)")
 	}
 	waiting := displayState == PiStateWaiting && liveness != LivenessStale
+	working := displayState == PiStateWorking && liveness != LivenessStale
 	doneStyle, done := PiDoneStyle(displayState, worktree.PiStateUpdatedAt, now)
 	highlight := doneStyle
+	if working {
+		highlight = PiWorkingStyle(frame)
+	}
 	if waiting {
 		highlight = styleAttention
 	}
+	highlighted := waiting || working || done
 	statusWord := " " + string(displayState)
-	if waiting || done {
+	if highlighted {
 		statusWord = highlight.Render(" " + string(displayState))
 	}
 	name := worktree.PiSessionName
 	if name == "" {
 		name = styleDim.Render("(unnamed)")
-	} else if waiting || done {
+	} else if highlighted {
 		name = highlight.Render(worktree.PiSessionName)
 	}
 	sessionValue := worktree.PiSessionIdentifier
