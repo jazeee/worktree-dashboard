@@ -36,7 +36,7 @@ var (
 	styleDirty   = lipgloss.NewStyle().Foreground(colorYellow)
 	styleAhead   = lipgloss.NewStyle().Foreground(colorCyan)
 	styleBehind  = lipgloss.NewStyle().Foreground(lipgloss.Color("5"))
-	styleWorking = lipgloss.NewStyle().Foreground(colorYellow)
+	styleWorking = lipgloss.NewStyle().Foreground(colorCyan)
 	styleIdle    = lipgloss.NewStyle().Foreground(colorGreen)
 	styleError   = lipgloss.NewStyle().Foreground(colorRed)
 	styleLocked  = lipgloss.NewStyle().Foreground(lipgloss.Color("208"))
@@ -56,7 +56,7 @@ var (
 
 	// Working styles cycle under the spinner so an in-progress pi session pulses
 	// and catches the eye across a full screen of rows.
-	stylesWorking = buildPulseStyles(0x5c3e00, 0xb87c00, 8)
+	stylesWorking = buildPulseStyles(0x00434c, 0x008798, 8)
 
 	// Done styles for an idle pi session, one per PiDoneFadeStep: the green block
 	// fades to black as the finished turn goes unread.
