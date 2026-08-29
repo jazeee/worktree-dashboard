@@ -18,6 +18,7 @@ var (
 	colorAccent = lipgloss.Color("12")
 
 	attentionBackground = lipgloss.Color("#870000")
+	doneBackground      = lipgloss.Color("#005f00")
 )
 
 // colorHighlight is the subtle background laid across the selected table row. It
@@ -47,6 +48,12 @@ var (
 	styleAttention = lipgloss.NewStyle().
 			Foreground(colorWhite).
 			Background(attentionBackground).
+			Bold(true)
+
+	// Done style for an idle, still-fresh pi session (inverse dark-green block).
+	styleDone = lipgloss.NewStyle().
+			Foreground(colorWhite).
+			Background(doneBackground).
 			Bold(true)
 
 	// Detail-pane border and counts bar.

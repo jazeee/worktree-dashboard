@@ -101,6 +101,15 @@ func PiStateGlyph(state PiState, frame int, blink BlinkPhase) string {
 	}
 }
 
+// PiSessionIsDone reports an idle session whose last update is recent enough
+// that it is a finished turn waiting to be read, not an abandoned one.
+func PiSessionIsDone(state PiState, updatedAt time.Time, now time.Time) bool {
+	if state != PiStateIdle || updatedAt.IsZero() {
+		return false
+	}
+	return now.Sub(updatedAt) <= PiStaleThreshold
+}
+
 // FormatPiCell renders the pi column for a row.
 func FormatPiCell(worktree WorktreeInfo, now time.Time, frame int) string {
 	if worktree.PiState == PiStateNone && worktree.PiSessionIdentifier == "" {
@@ -127,6 +136,9 @@ func FormatPiCell(worktree WorktreeInfo, now time.Time, frame int) string {
 	glyph := PiStateGlyph(displayState, frame, blink)
 	if displayState == PiStateWaiting {
 		return glyph + styleAttention.Render(" "+label)
+	}
+	if PiSessionIsDone(displayState, worktree.PiStateUpdatedAt, now) {
+		return glyph + styleDone.Render(" "+label)
 	}
 	return glyph + " " + label
 }
@@ -308,15 +320,20 @@ func BuildPiLines(worktree WorktreeInfo, now time.Time, frame int) []string {
 		staleSuffix = " " + styleDim.Render("(stale)")
 	}
 	waiting := displayState == PiStateWaiting && liveness != LivenessStale
-	statusWord := " " + string(displayState)
+	done := PiSessionIsDone(displayState, worktree.PiStateUpdatedAt, now)
+	highlight := styleDone
 	if waiting {
-		statusWord = styleAttention.Render(" " + string(displayState))
+		highlight = styleAttention
+	}
+	statusWord := " " + string(displayState)
+	if waiting || done {
+		statusWord = highlight.Render(" " + string(displayState))
 	}
 	name := worktree.PiSessionName
 	if name == "" {
 		name = styleDim.Render("(unnamed)")
-	} else if waiting {
-		name = styleAttention.Render(worktree.PiSessionName)
+	} else if waiting || done {
+		name = highlight.Render(worktree.PiSessionName)
 	}
 	sessionValue := worktree.PiSessionIdentifier
 	if sessionValue == "" {

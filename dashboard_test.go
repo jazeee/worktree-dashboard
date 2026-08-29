@@ -611,3 +611,24 @@ func TestItemKey(test *testing.T) {
 		test.Errorf("branch-only should key by branch, got %q", ItemKey(branchOnly))
 	}
 }
+
+func TestPiSessionIsDone(test *testing.T) {
+	now := time.Now()
+	cases := []struct {
+		name      string
+		state     PiState
+		updatedAt time.Time
+		expected  bool
+	}{
+		{"fresh idle is done", PiStateIdle, now.Add(-time.Minute), true},
+		{"long idle is not done", PiStateIdle, now.Add(-3 * time.Hour), false},
+		{"idle without timestamp is not done", PiStateIdle, time.Time{}, false},
+		{"working is not done", PiStateWorking, now, false},
+		{"waiting is not done", PiStateWaiting, now, false},
+	}
+	for _, testCase := range cases {
+		if PiSessionIsDone(testCase.state, testCase.updatedAt, now) != testCase.expected {
+			test.Errorf("%s: expected %v", testCase.name, testCase.expected)
+		}
+	}
+}
