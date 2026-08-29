@@ -101,13 +101,22 @@ func PiStateGlyph(state PiState, frame int, blink BlinkPhase) string {
 	}
 }
 
-// PiSessionIsDone reports an idle session whose last update is recent enough
-// that it is a finished turn waiting to be read, not an abandoned one.
-func PiSessionIsDone(state PiState, updatedAt time.Time, now time.Time) bool {
+// PiDoneStyle returns the highlight for an idle session — a finished turn
+// waiting to be read — fading one shade per PiDoneFadeStep. The second result is
+// false once the session has gone unread past the whole fade window.
+func PiDoneStyle(state PiState, updatedAt time.Time, now time.Time) (lipgloss.Style, bool) {
 	if state != PiStateIdle || updatedAt.IsZero() {
-		return false
+		return lipgloss.Style{}, false
 	}
-	return now.Sub(updatedAt) <= PiStaleThreshold
+	age := now.Sub(updatedAt)
+	if age < 0 {
+		age = 0
+	}
+	shade := int(age / PiDoneFadeStep)
+	if shade >= len(stylesDone) {
+		return lipgloss.Style{}, false
+	}
+	return stylesDone[shade], true
 }
 
 // FormatPiCell renders the pi column for a row.
@@ -137,8 +146,8 @@ func FormatPiCell(worktree WorktreeInfo, now time.Time, frame int) string {
 	if displayState == PiStateWaiting {
 		return glyph + styleAttention.Render(" "+label)
 	}
-	if PiSessionIsDone(displayState, worktree.PiStateUpdatedAt, now) {
-		return glyph + styleDone.Render(" "+label)
+	if doneStyle, done := PiDoneStyle(displayState, worktree.PiStateUpdatedAt, now); done {
+		return glyph + doneStyle.Render(" "+label)
 	}
 	return glyph + " " + label
 }
@@ -320,8 +329,8 @@ func BuildPiLines(worktree WorktreeInfo, now time.Time, frame int) []string {
 		staleSuffix = " " + styleDim.Render("(stale)")
 	}
 	waiting := displayState == PiStateWaiting && liveness != LivenessStale
-	done := PiSessionIsDone(displayState, worktree.PiStateUpdatedAt, now)
-	highlight := styleDone
+	doneStyle, done := PiDoneStyle(displayState, worktree.PiStateUpdatedAt, now)
+	highlight := doneStyle
 	if waiting {
 		highlight = styleAttention
 	}

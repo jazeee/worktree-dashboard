@@ -18,7 +18,6 @@ var (
 	colorAccent = lipgloss.Color("12")
 
 	attentionBackground = lipgloss.Color("#870000")
-	doneBackground      = lipgloss.Color("#005f00")
 )
 
 // colorHighlight is the subtle background laid across the selected table row. It
@@ -50,11 +49,9 @@ var (
 			Background(attentionBackground).
 			Bold(true)
 
-	// Done style for an idle, still-fresh pi session (inverse dark-green block).
-	styleDone = lipgloss.NewStyle().
-			Foreground(colorWhite).
-			Background(doneBackground).
-			Bold(true)
+	// Done styles for an idle pi session, one per PiDoneFadeStep: the green block
+	// fades to black as the finished turn goes unread.
+	stylesDone = buildDoneStyles([]lipgloss.Color{"#005f00", "#004000", "#002800", "#001200"})
 
 	// Detail-pane border and counts bar.
 	styleDetailBorder = lipgloss.NewStyle().
@@ -90,4 +87,12 @@ func StateColorFor(pullRequestState PullRequestState) lipgloss.Color {
 	default:
 		return colorWhite
 	}
+}
+
+func buildDoneStyles(backgrounds []lipgloss.Color) []lipgloss.Style {
+	styles := make([]lipgloss.Style, 0, len(backgrounds))
+	for _, background := range backgrounds {
+		styles = append(styles, lipgloss.NewStyle().Foreground(colorWhite).Background(background).Bold(true))
+	}
+	return styles
 }

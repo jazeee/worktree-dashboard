@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -612,7 +613,7 @@ func TestItemKey(test *testing.T) {
 	}
 }
 
-func TestPiSessionIsDone(test *testing.T) {
+func TestPiDoneStyle(test *testing.T) {
 	now := time.Now()
 	cases := []struct {
 		name      string
@@ -621,14 +622,28 @@ func TestPiSessionIsDone(test *testing.T) {
 		expected  bool
 	}{
 		{"fresh idle is done", PiStateIdle, now.Add(-time.Minute), true},
-		{"long idle is not done", PiStateIdle, now.Add(-3 * time.Hour), false},
+		{"idle within the fade window is done", PiStateIdle, now.Add(-50 * time.Minute), true},
+		{"idle past the fade window is not done", PiStateIdle, now.Add(-2 * time.Hour), false},
 		{"idle without timestamp is not done", PiStateIdle, time.Time{}, false},
 		{"working is not done", PiStateWorking, now, false},
 		{"waiting is not done", PiStateWaiting, now, false},
 	}
 	for _, testCase := range cases {
-		if PiSessionIsDone(testCase.state, testCase.updatedAt, now) != testCase.expected {
+		if _, done := PiDoneStyle(testCase.state, testCase.updatedAt, now); done != testCase.expected {
 			test.Errorf("%s: expected %v", testCase.name, testCase.expected)
 		}
+	}
+
+	previous := ""
+	for shade := 0; shade < len(stylesDone); shade++ {
+		style, done := PiDoneStyle(PiStateIdle, now.Add(-time.Duration(shade)*PiDoneFadeStep-time.Second), now)
+		if !done {
+			test.Fatalf("shade %d should still be highlighted", shade)
+		}
+		background := fmt.Sprintf("%v", style.GetBackground())
+		if background == previous {
+			test.Errorf("shade %d should differ from the previous one", shade)
+		}
+		previous = background
 	}
 }

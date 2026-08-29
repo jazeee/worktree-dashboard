@@ -247,6 +247,10 @@ const (
 	// session whose terminal died before its Stop/SessionEnd hook fired.
 	PiStaleThreshold = 2 * time.Hour
 
+	// PiDoneFadeStep: an idle session's green highlight drops one shade per step
+	// and disappears after four of them.
+	PiDoneFadeStep = 15 * time.Minute
+
 	PiPollInterval          = 500 * time.Millisecond
 	SpinnerTickInterval     = 125 * time.Millisecond
 	WorktreePollInterval    = 30 * time.Second
