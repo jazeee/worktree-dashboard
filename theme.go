@@ -56,7 +56,7 @@ var (
 
 	// Working styles cycle under the spinner so an in-progress pi session pulses
 	// and catches the eye across a full screen of rows.
-	stylesWorking = buildPulseStyles(0x3a2600, 0xb87c00, 16)
+	stylesWorking = buildPulseStyles(0x5c3e00, 0xb87c00, 8)
 
 	// Done styles for an idle pi session, one per PiDoneFadeStep: the green block
 	// fades to black as the finished turn goes unread.
