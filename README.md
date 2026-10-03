@@ -57,6 +57,19 @@ click-drag selection comes back — then press **`m`** again to restore
 click-to-select and wheel scrolling. (Holding **Shift** also selects text
 without toggling, if your terminal supports it.)
 
+## The pi launcher
+
+The `p` action runs `~/.local/bin/pi-worktree-session.sh`, which lives in this
+repo at `scripts/pi-worktree-session.sh`; symlink it once:
+
+```sh
+ln -sfn "$PWD/scripts/pi-worktree-session.sh" ~/.local/bin/pi-worktree-session.sh
+```
+
+It opens one reattachable tmux session per worktree with pi on the left and a
+shell on the right, resuming the session id recorded in
+`.claude-session-state` when there is one.
+
 ## Live refresh tiers
 
 Each tier is a self-rescheduling `tea.Tick`; a worktree/PR tick that fires while
