@@ -14,6 +14,7 @@ type pullRequestPayload struct {
 	ReviewDecision string `json:"reviewDecision"`
 	Title          string `json:"title"`
 	IsDraft        bool   `json:"isDraft"`
+	Mergeable      string `json:"mergeable"`
 }
 
 // FetchPullRequest queries gh for the PR on the worktree's branch. The bool
@@ -33,7 +34,7 @@ func FetchPullRequest(worktree WorktreeInfo) (pullRequestPayload, bool) {
 	result := RunCommand(
 		DefaultCommandTimeout, workingDirectory,
 		"gh", "pr", "view", worktree.Branch,
-		"--json", "number,url,state,reviewDecision,title,isDraft",
+		"--json", "number,url,state,reviewDecision,title,isDraft,mergeable",
 	)
 	if !result.Succeeded() {
 		return pullRequestPayload{}, false
@@ -78,6 +79,18 @@ func interpretReviewDecision(rawDecision string) ReviewDecision {
 	}
 }
 
+// interpretMergeState maps gh's mergeable string to a named union.
+func interpretMergeState(rawMergeable string) MergeState {
+	switch rawMergeable {
+	case "CONFLICTING":
+		return MergeConflicting
+	case "MERGEABLE":
+		return MergeClean
+	default:
+		return MergeUnknown
+	}
+}
+
 // ApplyPullRequestFields copies a fetched payload onto a worktree in place.
 func ApplyPullRequestFields(worktree *WorktreeInfo, payload pullRequestPayload) {
 	worktree.PullRequestNumber = payload.Number
@@ -85,6 +98,7 @@ func ApplyPullRequestFields(worktree *WorktreeInfo, payload pullRequestPayload) 
 	worktree.PullRequestState = interpretPullRequestState(payload.State, payload.IsDraft)
 	worktree.PullRequestTitle = payload.Title
 	worktree.ReviewDecision = interpretReviewDecision(payload.ReviewDecision)
+	worktree.MergeState = interpretMergeState(payload.Mergeable)
 }
 
 // CarryPullRequestFields copies PR state from a prior record onto a freshly
@@ -96,4 +110,5 @@ func CarryPullRequestFields(destination *WorktreeInfo, source WorktreeInfo) {
 	destination.PullRequestState = source.PullRequestState
 	destination.PullRequestTitle = source.PullRequestTitle
 	destination.ReviewDecision = source.ReviewDecision
+	destination.MergeState = source.MergeState
 }

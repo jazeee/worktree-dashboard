@@ -60,6 +60,7 @@ func newWorktreeInfoDefaults() WorktreeInfo {
 		Cleanliness:      CleanlinessUnknown,
 		PullRequestState: PullRequestNone,
 		ReviewDecision:   ReviewNone,
+		MergeState:       MergeUnknown,
 		PullRequestLoad:  LoadIdle,
 		ComposeStatus:    ComposeNotConfigured,
 		PiState:          PiStateNone,

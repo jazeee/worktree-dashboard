@@ -664,3 +664,28 @@ func TestPiWorkingStyleCycles(test *testing.T) {
 		test.Errorf("the pulse should sweep a smooth range of shades, got %d", len(seen))
 	}
 }
+
+func TestMergeConflictDetection(test *testing.T) {
+	worktree := newWorktreeInfoDefaults()
+	ParseStatusV2(&worktree, "# branch.ab +1 -0\n"+
+		"1 .M N... 100644 100644 100644 aaa bbb file1.go\n"+
+		"u UU N... 100644 100644 100644 100644 aaa bbb ccc conflicted.go\n")
+	if worktree.ConflictedFileCount != 1 {
+		test.Errorf("conflicted = %d, want 1", worktree.ConflictedFileCount)
+	}
+	if !HasMergeConflict(worktree) {
+		test.Errorf("unmerged paths should count as a conflict")
+	}
+
+	remoteOnly := newWorktreeInfoDefaults()
+	remoteOnly.MergeState = MergeConflicting
+	if !HasMergeConflict(remoteOnly) {
+		test.Errorf("a conflicting PR should count as a conflict")
+	}
+
+	clean := newWorktreeInfoDefaults()
+	clean.MergeState = MergeClean
+	if HasMergeConflict(clean) {
+		test.Errorf("a mergeable branch should not report a conflict")
+	}
+}

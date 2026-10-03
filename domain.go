@@ -70,6 +70,16 @@ const (
 	PullRequestUnknown PullRequestState = "Unknown"
 )
 
+// MergeState mirrors gh's mergeable field: whether the PR's branch still merges
+// cleanly into its base.
+type MergeState string
+
+const (
+	MergeUnknown     MergeState = "Unknown"
+	MergeClean       MergeState = "Clean"
+	MergeConflicting MergeState = "Conflicting"
+)
+
 // ReviewDecision mirrors gh's reviewDecision field as a named union.
 type ReviewDecision string
 
@@ -187,11 +197,12 @@ type WorktreeInfo struct {
 	LockState      LockState
 	LockReason     string
 
-	Cleanliness    WorkingTreeCleanliness
-	DirtyFileCount int
-	AheadCount     int
-	BehindCount    int
-	Upstream       string
+	Cleanliness         WorkingTreeCleanliness
+	DirtyFileCount      int
+	ConflictedFileCount int
+	AheadCount          int
+	BehindCount         int
+	Upstream            string
 
 	LastCommitSubject  string
 	LastCommitRelative string
@@ -202,6 +213,7 @@ type WorktreeInfo struct {
 	PullRequestState  PullRequestState
 	PullRequestTitle  string
 	ReviewDecision    ReviewDecision
+	MergeState        MergeState
 	PullRequestLoad   PullRequestLoad
 
 	ComposeScriptPath  string

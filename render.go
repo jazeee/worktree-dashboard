@@ -179,8 +179,17 @@ func pullRequestStateWord(state PullRequestState) string {
 	}
 }
 
+// HasMergeConflict reports a branch git or GitHub says no longer merges: either
+// unmerged paths in the working tree or a conflicting pull request.
+func HasMergeConflict(worktree WorktreeInfo) bool {
+	return worktree.ConflictedFileCount > 0 || worktree.MergeState == MergeConflicting
+}
+
 // FormatPullRequestStateCell renders the State column, including the fetch spinner.
 func FormatPullRequestStateCell(worktree WorktreeInfo, frame int) string {
+	if HasMergeConflict(worktree) {
+		return styleAttention.Render("conflict")
+	}
 	base := styleDim.Render("—")
 	if worktree.PullRequestNumber != 0 {
 		word := pullRequestStateWord(worktree.PullRequestState)
@@ -389,6 +398,11 @@ func BuildDetailView(worktree WorktreeInfo, now time.Time, frame int) string {
 	filesDisplay := strconv.Itoa(worktree.DirtyFileCount)
 	if worktree.Path == "" {
 		filesDisplay = styleDim.Render("n/a (no worktree)")
+	}
+	if worktree.ConflictedFileCount > 0 {
+		filesDisplay += "  " + styleAttention.Render(strconv.Itoa(worktree.ConflictedFileCount)+" conflicted")
+	} else if worktree.MergeState == MergeConflicting {
+		filesDisplay += "  " + styleAttention.Render("PR conflicts with its base")
 	}
 	upstreamDisplay := worktree.Upstream
 	if upstreamDisplay == "" {

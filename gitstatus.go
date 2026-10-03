@@ -21,6 +21,7 @@ const commitLogPretty = "--pretty=%h" + commitLogFieldSeparator + "%s" + commitL
 // non-empty line is a changed or untracked entry.
 func ParseStatusV2(worktree *WorktreeInfo, output string) {
 	dirtyCount := 0
+	conflictedCount := 0
 	for _, line := range strings.Split(output, "\n") {
 		if line == "" {
 			continue
@@ -41,8 +42,12 @@ func ParseStatusV2(worktree *WorktreeInfo, output string) {
 			continue
 		}
 		dirtyCount++
+		if strings.HasPrefix(line, "u ") {
+			conflictedCount++
+		}
 	}
 	worktree.DirtyFileCount = dirtyCount
+	worktree.ConflictedFileCount = conflictedCount
 	if dirtyCount == 0 {
 		worktree.Cleanliness = CleanlinessClean
 	} else {

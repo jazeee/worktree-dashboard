@@ -879,6 +879,7 @@ func (dashboard *DashboardModel) filterTombstoned(items []WorktreeInfo) []Worktr
 func mergeStatusFields(destination *WorktreeInfo, source WorktreeInfo) {
 	destination.Cleanliness = source.Cleanliness
 	destination.DirtyFileCount = source.DirtyFileCount
+	destination.ConflictedFileCount = source.ConflictedFileCount
 	destination.AheadCount = source.AheadCount
 	destination.BehindCount = source.BehindCount
 	destination.Upstream = source.Upstream
