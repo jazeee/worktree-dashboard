@@ -193,7 +193,11 @@ func FormatPullRequestStateCell(worktree WorktreeInfo, frame int) string {
 	base := styleDim.Render("—")
 	if worktree.PullRequestNumber != 0 {
 		word := pullRequestStateWord(worktree.PullRequestState)
-		base = lipglossForeground(StateColorFor(worktree.PullRequestState), word)
+		if isSettledPullRequest(worktree) {
+			base = styleDim.Render(word)
+		} else {
+			base = lipglossForeground(StateColorFor(worktree.PullRequestState), word)
+		}
 	}
 	if worktree.PullRequestLoad != LoadInProgress {
 		return base
@@ -205,10 +209,19 @@ func FormatPullRequestStateCell(worktree WorktreeInfo, frame int) string {
 	return spinner + " " + base
 }
 
+// isSettledPullRequest reports a merged-and-approved PR: nothing left to act on,
+// so its State and Review cells recede.
+func isSettledPullRequest(worktree WorktreeInfo) bool {
+	return worktree.PullRequestState == PullRequestMerged && worktree.ReviewDecision == ReviewApproved
+}
+
 // FormatReviewCell renders the Review column.
 func FormatReviewCell(worktree WorktreeInfo) string {
 	if worktree.PullRequestNumber == 0 {
 		return styleDim.Render("—")
+	}
+	if isSettledPullRequest(worktree) {
+		return styleDim.Render("approved")
 	}
 	switch worktree.ReviewDecision {
 	case ReviewApproved:
@@ -419,8 +432,11 @@ func BuildDetailView(worktree WorktreeInfo, now time.Time, frame int) string {
 	lines := []string{
 		styleBold.Render("Branch"),
 		"  " + RenderBranchCell(worktree),
-		"",
 	}
+	if worktree.PullRequestUrl != "" {
+		lines = append(lines, "  "+styleDim.Render(worktree.PullRequestUrl))
+	}
+	lines = append(lines, "")
 	lines = append(lines, BuildPiLines(worktree, now, frame)...)
 	lines = append(lines,
 		"",
