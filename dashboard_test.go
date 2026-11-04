@@ -32,6 +32,10 @@ func TestCategorizePath(test *testing.T) {
 		{"/home/jaz/code/notable/scr-01", KindRootWorktree},
 		{"/home/jaz/code/notable/scr-06-misc", KindRootWorktree},
 		{"/home/jaz/code/notable/vivaa", KindRootWorktree},
+		{"/home/jaz/code/notable/scr-02-backend/", KindRootWorktree},
+		{"/home/jaz/code/notable/scr-08-misc", KindNestedWorktree},
+		{"/home/jaz/code/notable/scr-01-feature", KindNestedWorktree},
+		{"/home/jaz/code/notable/scr-123", KindNestedWorktree},
 		{"/home/jaz/code/notable/scr-01/worktrees/feature", KindNestedWorktree},
 		{"/tmp/some/other/checkout", KindNestedWorktree},
 	}
@@ -51,8 +55,9 @@ func TestPermanentWorktreeLabel(test *testing.T) {
 		{"/home/jaz/code/notable/scr-01", KindRootWorktree, "1"},
 		{"/home/jaz/code/notable/scr-06-misc", KindRootWorktree, "6"},
 		{"/home/jaz/code/notable/scr-12", KindRootWorktree, "12"},
-		{"/home/jaz/code/notable/vivaa", KindRootWorktree, "2"},
-		{"/home/jaz/code/notable/vivaa/", KindRootWorktree, "2"},
+		{"/home/jaz/code/notable/vivaa", KindRootWorktree, "v"},
+		{"/home/jaz/code/notable/vivaa/", KindRootWorktree, "v"},
+		{"/home/jaz/code/notable/scr-10-misc", KindRootWorktree, "10"},
 		{"/home/jaz/code/notable/scr-01/worktrees/feature", KindNestedWorktree, ""},
 		{"/tmp/some/other/checkout", KindNestedWorktree, ""},
 	}
