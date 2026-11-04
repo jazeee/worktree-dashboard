@@ -2,50 +2,62 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 )
 
 // discovery.go finds worktrees and branch-only entries and orders them for
 // display. Ported from v1's discover_worktrees / discover_branches / discover_all.
 
-// rootWorktreePattern matches a root worktree path in this user's layout, e.g.
-// /home/jaz/code/notable/scr-01 or scr-06-misc. Ported verbatim from v1.
-var rootWorktreePattern = regexp.MustCompile(`/code/notable/scr-\d{2}(?:-[^/]+)?/?$`)
+// rootWorktreePattern matches a plain scr-NN root worktree, e.g. /home/jaz/code/notable/scr-01.
+var rootWorktreePattern = regexp.MustCompile(`/code/notable/scr-(\d{2})/?$`)
+
+// legacyRootWorktreeNames are suffixed scr-NN checkouts that predate the plain scr-NN layout.
+var legacyRootWorktreeNames = map[string]struct{}{
+	"scr-02-backend":       {},
+	"scr-03-web":           {},
+	"scr-04-design-system": {},
+	"scr-05-packages":      {},
+	"scr-06-misc":          {},
+	"scr-07-misc":          {},
+	"scr-09-misc":          {},
+	"scr-10-misc":          {},
+}
 
 // CategorizePath decides whether a worktree path is a root or a nested worktree.
 func CategorizePath(path string) WorktreeKind {
-	if rootWorktreePattern.MatchString(path) || strings.HasSuffix(path, "/notable/vivaa") {
+	if _, found := getPermanentWorktreeLabel(path); found {
 		return KindRootWorktree
 	}
 	return KindNestedWorktree
 }
 
-// permanentIndexPattern captures the NN in a .../notable/scr-NN[-suffix] root
-// worktree path so it can be shown as that worktree's fixed index.
-var permanentIndexPattern = regexp.MustCompile(`/notable/scr-(\d+)(?:-[^/]+)?/?$`)
+// getPermanentWorktreeLabel returns the fixed index for a permanent worktree path.
+func getPermanentWorktreeLabel(path string) (string, bool) {
+	trimmed := strings.TrimSuffix(path, "/")
+	if strings.HasSuffix(trimmed, "/code/notable/vivaa") {
+		return "v", true
+	}
+	if match := rootWorktreePattern.FindStringSubmatch(trimmed); match != nil {
+		return strings.TrimPrefix(match[1], "0"), true
+	}
+	parent, name := filepath.Split(trimmed)
+	if _, found := legacyRootWorktreeNames[name]; found && strings.HasSuffix(parent, "/code/notable/") {
+		return strings.TrimPrefix(name[len("scr-"):len("scr-NN")], "0"), true
+	}
+	return "", false
+}
 
 // PermanentWorktreeLabel returns the fixed index shown to the left of a permanent
-// (root) worktree row: the number from a scr-NN checkout, "2" for the vivaa
-// checkout (a unique case), and "" for any non-permanent row.
+// (root) worktree row: the NN from a scr-NN checkout, "v" for vivaa, "" otherwise.
 func PermanentWorktreeLabel(worktree WorktreeInfo) string {
 	if worktree.Kind != KindRootWorktree {
 		return ""
 	}
-	if strings.HasSuffix(strings.TrimSuffix(worktree.Path, "/"), "/notable/vivaa") {
-		return "2"
-	}
-	match := permanentIndexPattern.FindStringSubmatch(worktree.Path)
-	if match == nil {
-		return ""
-	}
-	number, conversionError := strconv.Atoi(match[1])
-	if conversionError != nil {
-		return ""
-	}
-	return strconv.Itoa(number)
+	label, _ := getPermanentWorktreeLabel(worktree.Path)
+	return label
 }
 
 // newWorktreeInfoDefaults returns a WorktreeInfo with every string-union field
