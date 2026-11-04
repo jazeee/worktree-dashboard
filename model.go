@@ -70,6 +70,9 @@ type DashboardModel struct {
 	lifecyclePhase  LifecyclePhase
 	mouseCapture    MouseCapture
 
+	lastClickKey  string
+	lastClickTime time.Time
+
 	deletedKeys map[string]time.Time
 
 	dialog DialogState
@@ -252,6 +255,20 @@ func (dashboard DashboardModel) selectRowAtPoint(pointX int, pointY int) (tea.Mo
 		return dashboard, nil
 	}
 	dashboard.moveCursorTo(target)
+	now := time.Now()
+	isDoubleClick := dashboard.lastClickKey == dashboard.currentKey && now.Sub(dashboard.lastClickTime) < 400*time.Millisecond
+	if isDoubleClick {
+		dashboard.lastClickKey = ""
+		worktree, found := dashboard.currentWorktree()
+		if found {
+			if desktop, parseError := strconv.Atoi(PermanentWorktreeLabel(worktree)); parseError == nil {
+				return dashboard, switchVirtualDesktopCommand(desktop)
+			}
+		}
+		return dashboard, nil
+	}
+	dashboard.lastClickKey = dashboard.currentKey
+	dashboard.lastClickTime = now
 	return dashboard, nil
 }
 

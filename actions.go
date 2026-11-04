@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +31,21 @@ func openPullRequestCommand(pullRequestUrl string) tea.Cmd {
 			return actionResultMsg{text: "Failed to open PR: " + openError.Error(), severity: SeverityError}
 		}
 		return actionResultMsg{text: "Opening " + pullRequestUrl, severity: SeverityInfo}
+	}
+}
+
+// switchVirtualDesktopCommand shows a KDE (KWin) virtual desktop by its 1-based number.
+func switchVirtualDesktopCommand(desktop int) tea.Cmd {
+	return func() tea.Msg {
+		result := RunCommand(5*time.Second, "", "qdbus6", "org.kde.KWin", "/KWin", "org.kde.KWin.setCurrentDesktop", strconv.Itoa(desktop))
+		if !result.Succeeded() {
+			return actionResultMsg{text: fmt.Sprintf("Failed to switch to desktop %d: %s", desktop, strings.TrimSpace(result.Stderr)), severity: SeverityError}
+		}
+		// KWin answers false both when the desktop is already current and when it does not exist.
+		if strings.TrimSpace(result.Stdout) != "true" {
+			return actionResultMsg{text: fmt.Sprintf("Desktop %d is already shown or does not exist", desktop), severity: SeverityWarning}
+		}
+		return actionResultMsg{text: fmt.Sprintf("Switched to desktop %d", desktop), severity: SeverityInfo}
 	}
 }
 
