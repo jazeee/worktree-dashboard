@@ -19,7 +19,6 @@ var legacyRootWorktreeNames = map[string]struct{}{
 	"scr-02-backend":       {},
 	"scr-03-web":           {},
 	"scr-04-design-system": {},
-	"scr-05-packages":      {},
 	"scr-06-misc":          {},
 	"scr-07-misc":          {},
 	"scr-09-misc":          {},
