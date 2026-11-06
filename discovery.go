@@ -20,7 +20,6 @@ var legacyRootWorktreeNames = map[string]struct{}{
 	"scr-03-web":           {},
 	"scr-04-design-system": {},
 	"scr-06-misc":          {},
-	"scr-07-misc":          {},
 	"scr-09-misc":          {},
 	"scr-10-misc":          {},
 }
