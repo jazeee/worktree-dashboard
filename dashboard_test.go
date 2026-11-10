@@ -30,7 +30,7 @@ func TestCategorizePath(test *testing.T) {
 		want WorktreeKind
 	}{
 		{"/home/jaz/code/notable/scr-01", KindRootWorktree},
-		{"/home/jaz/code/notable/scr-06-misc", KindRootWorktree},
+		{"/home/jaz/code/notable/scr-06", KindRootWorktree},
 		{"/home/jaz/code/notable/vivaa", KindRootWorktree},
 		{"/home/jaz/code/notable/scr-02-backend/", KindRootWorktree},
 		{"/home/jaz/code/notable/scr-08-misc", KindNestedWorktree},
@@ -53,7 +53,7 @@ func TestPermanentWorktreeLabel(test *testing.T) {
 		want string
 	}{
 		{"/home/jaz/code/notable/scr-01", KindRootWorktree, "1"},
-		{"/home/jaz/code/notable/scr-06-misc", KindRootWorktree, "6"},
+		{"/home/jaz/code/notable/scr-06", KindRootWorktree, "6"},
 		{"/home/jaz/code/notable/scr-12", KindRootWorktree, "12"},
 		{"/home/jaz/code/notable/vivaa", KindRootWorktree, "v"},
 		{"/home/jaz/code/notable/vivaa/", KindRootWorktree, "v"},

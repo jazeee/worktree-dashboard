@@ -18,8 +18,6 @@ var rootWorktreePattern = regexp.MustCompile(`/code/notable/scr-(\d{2})/?$`)
 var legacyRootWorktreeNames = map[string]struct{}{
 	"scr-02-backend":       {},
 	"scr-03-web":           {},
-	"scr-06-misc":          {},
-	"scr-09-misc":          {},
 	"scr-10-misc":          {},
 }
 
