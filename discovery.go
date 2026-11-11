@@ -17,7 +17,6 @@ var rootWorktreePattern = regexp.MustCompile(`/code/notable/scr-(\d{2})/?$`)
 // legacyRootWorktreeNames are suffixed scr-NN checkouts that predate the plain scr-NN layout.
 var legacyRootWorktreeNames = map[string]struct{}{
 	"scr-02-backend":       {},
-	"scr-03-web":           {},
 }
 
 // CategorizePath decides whether a worktree path is a root or a nested worktree.
