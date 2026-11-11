@@ -18,7 +18,6 @@ var rootWorktreePattern = regexp.MustCompile(`/code/notable/scr-(\d{2})/?$`)
 var legacyRootWorktreeNames = map[string]struct{}{
 	"scr-02-backend":       {},
 	"scr-03-web":           {},
-	"scr-10-misc":          {},
 }
 
 // CategorizePath decides whether a worktree path is a root or a nested worktree.
