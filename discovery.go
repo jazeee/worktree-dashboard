@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -13,11 +12,6 @@ import (
 
 // rootWorktreePattern matches a plain scr-NN root worktree, e.g. /home/jaz/code/notable/scr-01.
 var rootWorktreePattern = regexp.MustCompile(`/code/notable/scr-(\d{2})/?$`)
-
-// legacyRootWorktreeNames are suffixed scr-NN checkouts that predate the plain scr-NN layout.
-var legacyRootWorktreeNames = map[string]struct{}{
-	"scr-02-backend":       {},
-}
 
 // CategorizePath decides whether a worktree path is a root or a nested worktree.
 func CategorizePath(path string) WorktreeKind {
@@ -35,10 +29,6 @@ func getPermanentWorktreeLabel(path string) (string, bool) {
 	}
 	if match := rootWorktreePattern.FindStringSubmatch(trimmed); match != nil {
 		return strings.TrimPrefix(match[1], "0"), true
-	}
-	parent, name := filepath.Split(trimmed)
-	if _, found := legacyRootWorktreeNames[name]; found && strings.HasSuffix(parent, "/code/notable/") {
-		return strings.TrimPrefix(name[len("scr-"):len("scr-NN")], "0"), true
 	}
 	return "", false
 }

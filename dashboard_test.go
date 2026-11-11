@@ -32,7 +32,7 @@ func TestCategorizePath(test *testing.T) {
 		{"/home/jaz/code/notable/scr-01", KindRootWorktree},
 		{"/home/jaz/code/notable/scr-06", KindRootWorktree},
 		{"/home/jaz/code/notable/vivaa", KindRootWorktree},
-		{"/home/jaz/code/notable/scr-02-backend/", KindRootWorktree},
+		{"/home/jaz/code/notable/scr-02-backend/", KindNestedWorktree},
 		{"/home/jaz/code/notable/scr-08-misc", KindNestedWorktree},
 		{"/home/jaz/code/notable/scr-01-feature", KindNestedWorktree},
 		{"/home/jaz/code/notable/scr-123", KindNestedWorktree},
